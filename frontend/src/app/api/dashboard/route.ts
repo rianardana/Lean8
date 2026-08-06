@@ -1,67 +1,89 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import type { DailyLog } from '@prisma/client'
 
-const DEFAULT_DAILY = {
-  workout: false,
-  ifCompleted: false,
-  proteinCompleted: false,
-  waterCompleted: false,
-  sleepCompleted: false,
-  noSnack: false,
-  notes: null,
-}
+/**
+ * GET /api/dashboard
+ * Menggabungkan data User + WeightLog + DailyLog hari ini
+ * untuk kebutuhan DashboardView (menggantikan endpoint ASP.NET lama).
+ */
+export async function GET() {
+  // Ambil semua data yang dibutuhin dashboard dalam 1 kali jalan
+  const [user, todayLog, weightLogs] = await Promise.all([
+    prisma.user.findUnique({ where: { id: 1 } }),
+    prisma.dailyLog.findUnique({ where: { date: todayKey() } }),
+    prisma.weightLog.findMany({ orderBy: { date: 'asc' } }),
+  ])
 
-function countCompleted(log: DailyLog) {
-  return [
-    log.workout, log.ifCompleted, log.proteinCompleted,
-    log.waterCompleted, log.sleepCompleted, log.noSnack,
-  ].filter(Boolean).length
-}
+  // --- User (pakai default kalau belum ada record di Neon) ---
+  const initialWeight = user?.currentWeight ?? 86
+  const targetWeight = user?.targetWeight ?? 65
 
-// GET /api/daily?date=2026-08-06
-export async function GET(req: NextRequest) {
-  const date = req.nextUrl.searchParams.get('date')
-  if (!date) return NextResponse.json({ error: 'date required' }, { status: 400 })
+  // --- Berat sekarang = entri WeightLog terbaru, fallback ke user.currentWeight ---
+  const latestWeight = weightLogs.length > 0
+    ? weightLogs[weightLogs.length - 1].weight
+    : initialWeight
 
-  const log = await prisma.dailyLog.findUnique({ where: { date } })
+  // --- Progress Goal (%) ---
+  const totalToLose = initialWeight - targetWeight
+  const lostSoFar = initialWeight - latestWeight
+  const progressPercent = totalToLose > 0
+    ? Math.round((lostSoFar / totalToLose) * 1000) / 10   // 1 desimal
+    : 0
 
-  if (!log) {
-    return NextResponse.json({
-      id: 0, date, ...DEFAULT_DAILY, completedCount: 0,
-    })
-  }
+  // --- Hari ke- (streak): hitung dari WeightLog pertama sampai hari ini ---
+  const dayNumber = weightLogs.length > 0
+    ? diffDays(weightLogs[0].date, todayKey()) + 1
+    : 1
 
-  return NextResponse.json({ ...log, completedCount: countCompleted(log) })
-}
+  // --- Daily log hari ini (buat card "Isi Daily Checklist") ---
+  const completedCount = todayLog
+    ? [
+        todayLog.workout, todayLog.ifCompleted, todayLog.proteinCompleted,
+        todayLog.waterCompleted, todayLog.sleepCompleted, todayLog.noSnack,
+      ].filter(Boolean).length
+    : 0
 
-// POST /api/daily  (upsert)
-export async function POST(req: NextRequest) {
-  const input = await req.json()
-  if (!input.date) return NextResponse.json({ error: 'date required' }, { status: 400 })
-
-  const saved = await prisma.dailyLog.upsert({
-    where: { date: input.date },
-    update: {
-      workout: input.workout ?? false,
-      ifCompleted: input.ifCompleted ?? false,
-      proteinCompleted: input.proteinCompleted ?? false,
-      waterCompleted: input.waterCompleted ?? false,
-      sleepCompleted: input.sleepCompleted ?? false,
-      noSnack: input.noSnack ?? false,
-      notes: input.notes ?? null,
+  return NextResponse.json({
+    user: {
+      name: user?.name ?? 'Lean8 User',
+      heightCm: user?.heightCm ?? 175,
+      currentWeight: latestWeight,
+      targetWeight,
+      initialWeight,
+      workoutTime: user?.workoutTime ?? '07:00',
+      sleepTime: user?.sleepTime ?? '22:00',
+      proteinTargetGrams: user?.proteinTargetGrams ?? 120,
     },
-    create: {
-      date: input.date,
-      workout: input.workout ?? false,
-      ifCompleted: input.ifCompleted ?? false,
-      proteinCompleted: input.proteinCompleted ?? false,
-      waterCompleted: input.waterCompleted ?? false,
-      sleepCompleted: input.sleepCompleted ?? false,
-      noSnack: input.noSnack ?? false,
-      notes: input.notes ?? null,
+    stats: {
+      currentWeight: latestWeight,
+      targetWeight,
+      initialWeight,
+      remainingKg: Math.round((targetWeight - latestWeight) * 10) / 10,
+      lostKg: Math.round(lostSoFar * 10) / 10,
+      progressPercent,
+      dayNumber,
+      completedToday: completedCount,
+      hasTodayLog: !!todayLog,
     },
+    weightLogs,
+    todayLog: todayLog ?? null,
   })
+}
 
-  return NextResponse.json({ ...saved, completedCount: countCompleted(saved) })
+// ---- helpers ----
+
+// format tanggal lokal YYYY-MM-DD (sesuai format kolom `date` di schema)
+function todayKey(): string {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+// selisih hari antara dua key YYYY-MM-DD
+function diffDays(fromKey: string, toKey: string): number {
+  const from = new Date(fromKey + 'T00:00:00')
+  const to = new Date(toKey + 'T00:00:00')
+  return Math.round((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24))
 }
