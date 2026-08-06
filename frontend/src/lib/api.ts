@@ -39,109 +39,99 @@ export const api = {
   },
 
   async getAiReview(userId: number, date: string): Promise<AiReviewData> {
-  const todayLog = await this.getDaily(userId, date).catch(() => null);
+    const todayLog = await this.getDaily(userId, date).catch(() => null);
 
-  // === POOL SARAN (~40), dikategorikan ===
-  const pool = {
-    sleep: [
-      "Matikan layar 30 menit sebelum jam tidur (22:00) untuk mempermudah recovery harian.",
-      "Turunkan suhu kamar 1-2°C agar tubuh lebih cepat masuk fase deep sleep.",
-      "Hindari kafein setelah jam 14:00 supaya kualitas tidur malam tidak terganggu.",
-      "Lakukan stretching ringan 5 menit sebelum tidur untuk menurunkan tensi otot.",
-      "Pasang mode malam di HP agar blue light tidak menekan produksi melatonin.",
-      "Tidur dan bangun di jam yang sama setiap hari, termasuk akhir pekan, untuk ritme sirkadian stabil.",
-      "Jauhkan HP dari jangkauan tangan saat tidur agar tidak tergoda scroll tengah malam.",
-    ],
-    water: [
-      "Minum 500ml air putih begitu bangun tidur untuk memicu pembakaran kalori alami.",
-      "Siapkan botol 1L di meja kerja dan targetkan habis sebelum makan siang.",
-      "Minum 1 gelas air 20 menit sebelum makan untuk membantu kontrol porsi.",
-      "Tambahkan irisan lemon atau mentimun biar air putih terasa lebih segar dan gampang habis.",
-      "Setel alarm tiap 90 menit sebagai pengingat minum, terutama saat fokus kerja.",
-      "Pantau warna urin — kuning pucat tanda hidrasi cukup, kuning pekat berarti kurang minum.",
-    ],
-    protein: [
-      "Pastikan porsi dada ayam / telur ditambah saat makan malam agar otot terlindungi.",
-      "Targetkan 25-30g protein di setiap kali makan, bukan ditumpuk di satu waktu saja.",
-      "Siapkan camilan tinggi protein seperti greek yogurt atau edamame untuk sela-sela makan.",
-      "Tambahkan 1 scoop whey setelah latihan untuk mempercepat pemulihan otot.",
-      "Variasikan sumber protein (ayam, ikan, tempe, telur) agar mikronutrien lebih lengkap.",
-      "Masak telur rebus batch di awal minggu supaya stok protein praktis selalu siap.",
-    ],
-    workout: [
-      "Lakukan jalan santai 15 menit paska makan siang untuk mengontrol gula darah.",
-      "Fokus pada progressive overload: tambah beban atau repetisi sedikit dari sesi sebelumnya.",
-      "Mulai dengan 5 menit pemanasan dinamis agar cedera terhindar dan performa maksimal.",
-      "Kalau malas berat, komitmen minimal 10 menit gerak — biasanya momentum akan berlanjut.",
-      "Latih otot besar (kaki, punggung, dada) dulu karena membakar kalori paling efisien.",
-      "Catat angka latihan hari ini supaya progres mingguan bisa terlihat nyata.",
-      "Akhiri sesi dengan 5 menit pendinginan agar nyeri otot besok berkurang.",
-    ],
-    fasting: [
-      "Perpanjang jendela puasa 30 menit bertahap jika 16:8 sudah terasa nyaman.",
-      "Saat jam rawan lapar, minum teh tanpa gula atau air soda plain untuk menahan craving.",
-      "Pindahkan makan malam lebih awal agar durasi fasting malam otomatis memanjang.",
-      "Isi jam puasa dengan aktivitas ringan supaya pikiran tidak terus tertuju ke makanan.",
-      "Pastikan makan pertama setelah puasa kaya protein & serat agar kenyang lebih lama.",
-    ],
-    snack: [
-      "Singkirkan stok snack manis di meja kerja agar tidak tergoda craving saat kerja.",
-      "Ganti cemilan keripik dengan kacang panggang tanpa garam untuk lemak yang lebih sehat.",
-      "Jangan belanja dalam keadaan lapar — daftar belanja ketat menghindarkan impulse buy junk food.",
-      "Kalau craving manis menyerang, coba tunggu 10 menit sambil minum air, biasanya reda.",
-      "Sediakan buah potong di kulkas sebagai opsi ngemil default yang rendah kalori.",
-    ],
-    mindset: [
-      "Ingat alasan awal memulai — konsistensi kecil tiap hari mengalahkan motivasi sesaat.",
-      "Rayakan kemenangan kecil hari ini, sekecil apa pun, untuk membangun identitas baru.",
-      "Satu hari buruk tidak menghapus progres berminggu-minggu. Reset di makan berikutnya, bukan besok.",
-      "Fokus pada proses (habit), bukan hanya angka timbangan, agar mental tetap stabil.",
-      "Bandingkan diri hanya dengan versi dirimu kemarin, bukan dengan orang lain.",
-      "Visualisasikan versi lean idealmu setiap pagi selama 30 detik untuk memperkuat komitmen.",
-    ],
-    recovery: [
-      "Luangkan 10 menit foam rolling di area yang tegang untuk mempercepat pemulihan.",
-      "Pastikan asupan magnesium (sayur hijau, pisang) untuk mengurangi kram & memperbaiki tidur.",
-      "Ambil 1 hari deload ringan jika badan terasa sangat lelah agar tidak overtraining.",
-      "Tidur siang power nap 15-20 menit boleh jika kurang tidur, tapi jangan lebih agar tidak pusing.",
-    ],
-  };
+    const pool = {
+      sleep: [
+        "Matikan layar 30 menit sebelum jam tidur (22:00) untuk mempermudah recovery harian.",
+        "Turunkan suhu kamar 1-2°C agar tubuh lebih cepat masuk fase deep sleep.",
+        "Hindari kafein setelah jam 14:00 supaya kualitas tidur malam tidak terganggu.",
+        "Lakukan stretching ringan 5 menit sebelum tidur untuk menurunkan tensi otot.",
+        "Pasang mode malam di HP agar blue light tidak menekan produksi melatonin.",
+        "Tidur dan bangun di jam yang sama setiap hari, termasuk akhir pekan, untuk ritme sirkadian stabil.",
+        "Jauhkan HP dari jangkauan tangan saat tidur agar tidak tergoda scroll tengah malam.",
+      ],
+      water: [
+        "Minum 500ml air putih begitu bangun tidur untuk memicu pembakaran kalori alami.",
+        "Siapkan botol 1L di meja kerja dan targetkan habis sebelum makan siang.",
+        "Minum 1 gelas air 20 menit sebelum makan untuk membantu kontrol porsi.",
+        "Tambahkan irisan lemon atau mentimun biar air putih terasa lebih segar dan gampang habis.",
+        "Setel alarm tiap 90 menit sebagai pengingat minum, terutama saat fokus kerja.",
+        "Pantau warna urin — kuning pucat tanda hidrasi cukup, kuning pekat berarti kurang minum.",
+      ],
+      protein: [
+        "Pastikan porsi dada ayam / telur ditambah saat makan malam agar otot terlindungi.",
+        "Targetkan 25-30g protein di setiap kali makan, bukan ditumpuk di satu waktu saja.",
+        "Siapkan camilan tinggi protein seperti greek yogurt atau edamame untuk sela-sela makan.",
+        "Tambahkan 1 scoop whey setelah latihan untuk mempercepat pemulihan otot.",
+        "Variasikan sumber protein (ayam, ikan, tempe, telur) agar mikronutrien lebih lengkap.",
+        "Masak telur rebus batch di awal minggu supaya stok protein praktis selalu siap.",
+      ],
+      workout: [
+        "Lakukan jalan santai 15 menit paska makan siang untuk mengontrol gula darah.",
+        "Fokus pada progressive overload: tambah beban atau repetisi sedikit dari sesi sebelumnya.",
+        "Mulai dengan 5 menit pemanasan dinamis agar cedera terhindar dan performa maksimal.",
+        "Kalau malas berat, komitmen minimal 10 menit gerak — biasanya momentum akan berlanjut.",
+        "Latih otot besar (kaki, punggung, dada) dulu karena membakar kalori paling efisien.",
+        "Catat angka latihan hari ini supaya progres mingguan bisa terlihat nyata.",
+        "Akhiri sesi dengan 5 menit pendinginan agar nyeri otot besok berkurang.",
+      ],
+      fasting: [
+        "Perpanjang jendela puasa 30 menit bertahap jika 16:8 sudah terasa nyaman.",
+        "Saat jam rawan lapar, minum teh tanpa gula atau air soda plain untuk menahan craving.",
+        "Pindahkan makan malam lebih awal agar durasi fasting malam otomatis memanjang.",
+        "Isi jam puasa dengan aktivitas ringan supaya pikiran tidak terus tertuju ke makanan.",
+        "Pastikan makan pertama setelah puasa kaya protein & serat agar kenyang lebih lama.",
+      ],
+      snack: [
+        "Singkirkan stok snack manis di meja kerja agar tidak tergoda craving saat kerja.",
+        "Ganti cemilan keripik dengan kacang panggang tanpa garam untuk lemak yang lebih sehat.",
+        "Jangan belanja dalam keadaan lapar — daftar belanja ketat menghindarkan impulse buy junk food.",
+        "Kalau craving manis menyerang, coba tunggu 10 menit sambil minum air, biasanya reda.",
+        "Sediakan buah potong di kulkas sebagai opsi ngemil default yang rendah kalori.",
+      ],
+      mindset: [
+        "Ingat alasan awal memulai — konsistensi kecil tiap hari mengalahkan motivasi sesaat.",
+        "Rayakan kemenangan kecil hari ini, sekecil apa pun, untuk membangun identitas baru.",
+        "Satu hari buruk tidak menghapus progres berminggu-minggu. Reset di makan berikutnya, bukan besok.",
+        "Fokus pada proses (habit), bukan hanya angka timbangan, agar mental tetap stabil.",
+        "Bandingkan diri hanya dengan versi dirimu kemarin, bukan dengan orang lain.",
+        "Visualisasikan versi lean idealmu setiap pagi selama 30 detik untuk memperkuat komitmen.",
+      ],
+      recovery: [
+        "Luangkan 10 menit foam rolling di area yang tegang untuk mempercepat pemulihan.",
+        "Pastikan asupan magnesium (sayur hijau, pisang) untuk mengurangi kram & memperbaiki tidur.",
+        "Ambil 1 hari deload ringan jika badan terasa sangat lelah agar tidak overtraining.",
+        "Tidur siang power nap 15-20 menit boleh jika kurang tidur, tapi jangan lebih agar tidak pusing.",
+      ],
+    };
 
-  // === Pilih saran RELEVAN dulu (habit yang belum tercapai) ===
-  const targeted: string[] = [];
-  if (!todayLog || !todayLog.sleepCompleted) targeted.push(...pool.sleep);
-  if (!todayLog || !todayLog.waterCompleted) targeted.push(...pool.water);
-  if (!todayLog || !todayLog.proteinCompleted) targeted.push(...pool.protein);
-  if (!todayLog || !todayLog.workout) targeted.push(...pool.workout);
-  if (!todayLog || !todayLog.ifCompleted) targeted.push(...pool.fasting);
-  if (!todayLog || !todayLog.noSnack) targeted.push(...pool.snack);
+    const targeted: string[] = [];
+    if (!todayLog || !todayLog.sleepCompleted) targeted.push(...pool.sleep);
+    if (!todayLog || !todayLog.waterCompleted) targeted.push(...pool.water);
+    if (!todayLog || !todayLog.proteinCompleted) targeted.push(...pool.protein);
+    if (!todayLog || !todayLog.workout) targeted.push(...pool.workout);
+    if (!todayLog || !todayLog.ifCompleted) targeted.push(...pool.fasting);
+    if (!todayLog || !todayLog.noSnack) targeted.push(...pool.snack);
 
-  // === Sisanya dari mindset & recovery (selalu bagus) ===
-  const general = [...pool.mindset, ...pool.recovery];
+    const general = [...pool.mindset, ...pool.recovery];
+    const shuffle = <T,>(arr: T[]): T[] => arr.sort(() => Math.random() - 0.5);
 
-  // === Acak & gabung: ambil beberapa targeted + beberapa general ===
-  const shuffle = <T,>(arr: T[]): T[] => arr.sort(() => Math.random() - 0.5);
-  const pickTargeted = shuffle(targeted).slice(0, 5);
-  const pickGeneral = shuffle(general).slice(0, 3);
-  let points = [...pickTargeted, ...pickGeneral];
+    const pickTargeted = shuffle(targeted).slice(0, 3);
+    const pickGeneral = shuffle(general).slice(0, 2);
+    let points = [...pickTargeted, ...pickGeneral];
 
-  // Kalau semua habit sempurna → beri apresiasi + saran lanjutan
-  if (targeted.length === 0) {
-    points = [
-      "Semua habit tercapai sempurna hari ini! Konsistensi 100% terjaga — luar biasa.",
-      "Pertahankan waktu tidur disiplin untuk memaksimalkan metabolisme tubuh.",
-      ...shuffle(general).slice(0, 4),
-      "Karena dasar sudah solid, coba tantang diri: tambah intensitas latihan 5% minggu ini.",
-    ];
-  }
+    if (targeted.length === 0) {
+      points = [
+        "Semua habit tercapai sempurna hari ini! Konsistensi 100% terjaga — luar biasa.",
+        "Pertahankan waktu tidur disiplin untuk memaksimalkan metabolisme tubuh.",
+        ...shuffle(general).slice(0, 2),
+        "Karena dasar sudah solid, coba tantang diri: tambah intensitas latihan 5% minggu ini.",
+      ];
+    }
 
-  // Acak urutan akhir biar terasa fresh tiap klik
-  points = shuffle(points).slice(0, 8);
+    points = shuffle(points).slice(0, 5);
 
-  return {
-    date,
-    actionablePoints: points,
-    rawSummary: points.join("\n"),
-  };
-},
+    return { date, actionablePoints: points, rawSummary: points.join("\n") };
+  },
 };
