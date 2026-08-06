@@ -72,9 +72,17 @@ export const api = {
 
   // ---- Settings / User ----
   async getSettings(): Promise<UserSettingsData> {
-    const user = await request<UserSettingsData>("/api/user");
-    return user;
-  },
+  const user = await request<UserSettingsData>("/api/user");
+  return user ?? {
+    name: "Lean8 User",
+    heightCm: 175,
+    currentWeight: 86,
+    targetWeight: 65,
+    workoutTime: "07:00",
+    sleepTime: "22:00",
+    proteinTargetGrams: 120,
+  };
+},
 
   async saveSettings(settings: UserSettingsData): Promise<UserSettingsData> {
     return request<UserSettingsData>("/api/user", {
