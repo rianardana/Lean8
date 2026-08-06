@@ -1,0 +1,6 @@
+@Lean8.Api_HostAddress = http://localhost:5214
+
+GET {{Lean8.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

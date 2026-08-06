@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "YvrnauGLqMFvdtwcRxHMOz2eoNZ2UPZ/0XZJBmBzmRw=",
+  "Source": "Lean8.Api",
+  "BasePath": "_content/Lean8.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
