@@ -1,71 +1,67 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import type { DailyLog } from '@prisma/client'
 
-export async function GET() {
-  try {
-    // 1. Get or seed default single user
-    let user = await prisma.user.findUnique({
-      where: { id: 1 },
-    });
+const DEFAULT_DAILY = {
+  workout: false,
+  ifCompleted: false,
+  proteinCompleted: false,
+  waterCompleted: false,
+  sleepCompleted: false,
+  noSnack: false,
+  notes: null,
+}
 
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          id: 1,
-          name: "Lean8 User",
-          heightCm: 175,
-          currentWeight: 86,
-          targetWeight: 65,
-          workoutTime: "07:00",
-          sleepTime: "22:00",
-          proteinTargetGrams: 120,
-        },
-      });
-    }
+function countCompleted(log: DailyLog) {
+  return [
+    log.workout, log.ifCompleted, log.proteinCompleted,
+    log.waterCompleted, log.sleepCompleted, log.noSnack,
+  ].filter(Boolean).length
+}
 
-    // 2. Fetch weight logs for progress & starting weight
-    const latestWeightLog = await prisma.weightLog.findFirst({
-      orderBy: { date: "desc" },
-    });
+// GET /api/daily?date=2026-08-06
+export async function GET(req: NextRequest) {
+  const date = req.nextUrl.searchParams.get('date')
+  if (!date) return NextResponse.json({ error: 'date required' }, { status: 400 })
 
-    const firstWeightLog = await prisma.weightLog.findFirst({
-      orderBy: { date: "asc" },
-    });
+  const log = await prisma.dailyLog.findUnique({ where: { date } })
 
-    const currentWeight = latestWeightLog?.weight ?? user.currentWeight;
-    const startingWeight = firstWeightLog?.weight ?? 86.0;
-    const targetWeight = user.targetWeight;
-
-    // 3. Calculate progress percentage (86 -> 65kg goal)
-    let progressPercentage = 0;
-    const totalToLose = startingWeight - targetWeight;
-    if (totalToLose > 0) {
-      const lost = startingWeight - currentWeight;
-      progressPercentage = Math.min(100, Math.max(0, Math.round((lost / totalToLose) * 1000) / 10));
-    }
-
-    // 4. Count active days
-    const activeDailyLogs = await prisma.dailyLog.count();
-    const activeWeightLogs = await prisma.weightLog.count();
-    const activeDays = Math.max(1, activeDailyLogs || activeWeightLogs || 1);
-
+  if (!log) {
     return NextResponse.json({
-      currentWeight,
-      targetWeight,
-      startingWeight,
-      progressPercentage,
-      activeDays,
-      userHandshakeName: user.name,
-    });
-  } catch {
-    // Graceful fallback if database connection is pending env configuration
-    return NextResponse.json({
-      currentWeight: 86.0,
-      targetWeight: 65.0,
-      startingWeight: 86.0,
-      progressPercentage: 0,
-      activeDays: 1,
-      userHandshakeName: "Lean8 User",
-    });
+      id: 0, date, ...DEFAULT_DAILY, completedCount: 0,
+    })
   }
+
+  return NextResponse.json({ ...log, completedCount: countCompleted(log) })
+}
+
+// POST /api/daily  (upsert)
+export async function POST(req: NextRequest) {
+  const input = await req.json()
+  if (!input.date) return NextResponse.json({ error: 'date required' }, { status: 400 })
+
+  const saved = await prisma.dailyLog.upsert({
+    where: { date: input.date },
+    update: {
+      workout: input.workout ?? false,
+      ifCompleted: input.ifCompleted ?? false,
+      proteinCompleted: input.proteinCompleted ?? false,
+      waterCompleted: input.waterCompleted ?? false,
+      sleepCompleted: input.sleepCompleted ?? false,
+      noSnack: input.noSnack ?? false,
+      notes: input.notes ?? null,
+    },
+    create: {
+      date: input.date,
+      workout: input.workout ?? false,
+      ifCompleted: input.ifCompleted ?? false,
+      proteinCompleted: input.proteinCompleted ?? false,
+      waterCompleted: input.waterCompleted ?? false,
+      sleepCompleted: input.sleepCompleted ?? false,
+      noSnack: input.noSnack ?? false,
+      notes: input.notes ?? null,
+    },
+  })
+
+  return NextResponse.json({ ...saved, completedCount: countCompleted(saved) })
 }

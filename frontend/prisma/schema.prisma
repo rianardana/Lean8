@@ -11,7 +11,7 @@ datasource db {
 
 model User {
   id                 Int     @id @default(1)
-  name               String  @default("Lean8 User")
+  name               String  @default("Yan")
   heightCm           Float   @default(175)
   currentWeight      Float   @default(86)
   targetWeight       Float   @default(65)
