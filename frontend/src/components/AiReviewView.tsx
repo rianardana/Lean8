@@ -45,7 +45,7 @@ export const AiReviewView: React.FC<AiReviewViewProps> = ({ userId }) => {
       {!loading && review && (
         <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-6 sm:p-8 space-y-6 animate-fade-in shadow-2xl">
           <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-            <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2"><Sparkles className="w-5 h-5 text-teal-400" /><span>5 Poin Praktis Coach</span></h3>
+            <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2"><Sparkles className="w-5 h-5 text-teal-400" /><span> Poin Praktis Coach</span></h3>
             <span className="text-xs font-mono text-slate-400 bg-slate-950 px-3 py-1 rounded-xl border border-slate-800">{review.date}</span>
           </div>
           <div className="space-y-3">
