@@ -24,9 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
       <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
         {/* Brand Header */}
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-extrabold text-slate-950 text-lg shadow-lg shadow-emerald-500/20">
-            L8
-          </div>
+             <img src="/logo.png" alt="Lean8 Logo" className="h-8 w-8" />
           <div>
             <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-slate-100 via-emerald-200 to-teal-400 bg-clip-text text-transparent">
               LEAN8

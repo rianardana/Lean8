@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// GET /api/weight  → semua weight log (terurut)
-export async function GET() {
-  const logs = await prisma.weightLog.findMany({ orderBy: { date: 'asc' } })
+export async function GET(req: NextRequest) {
+  const userId = Number(req.nextUrl.searchParams.get('userId') ?? 1)
+  const logs = await prisma.weightLog.findMany({ where: { userId }, orderBy: { date: 'asc' } })
   return NextResponse.json(logs)
 }
 
-// POST /api/weight  { date, weight }
 export async function POST(req: NextRequest) {
-  const { date, weight } = await req.json()
+  const userId = Number(req.nextUrl.searchParams.get('userId') ?? 1)
+  const { date, weight } = (await req.json()) as { date: string; weight: number }
   if (!date || weight == null) return NextResponse.json({ error: 'date & weight required' }, { status: 400 })
 
   const saved = await prisma.weightLog.upsert({
-    where: { date },
+    where: { userId_date: { userId, date } },
     update: { weight },
-    create: { date, weight },
+    create: { userId, date, weight },
   })
   return NextResponse.json(saved)
 }

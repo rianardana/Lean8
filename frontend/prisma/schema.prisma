@@ -1,5 +1,3 @@
-// Prisma schema for Lean8 (Neon PostgreSQL)
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,26 +8,33 @@ datasource db {
 }
 
 model User {
-  id                 Int     @id @default(1)
-  name               String  @default("Yan")
-  heightCm           Float   @default(175)
-  currentWeight      Float   @default(86)
-  targetWeight       Float   @default(65)
-  workoutTime        String? @default("07:00")
-  sleepTime          String? @default("22:00")
-  proteinTargetGrams Int     @default(120)
+  id                 Int        @id // 1 = Rian, 2 = Wahyu (fixed)
+  name               String
+  heightCm           Float      @default(175)
+  currentWeight      Float      @default(86)
+  targetWeight       Float      @default(65)
+  workoutTime        String?    @default("07:00")
+  sleepTime          String?    @default("22:00")
+  proteinTargetGrams Int        @default(120)
+  dailyLogs          DailyLog[]
+  weightLogs         WeightLog[]
 }
 
 model WeightLog {
   id        Int      @id @default(autoincrement())
-  date      String   @unique
+  userId    Int
+  date      String
   weight    Float
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, date])
 }
 
 model DailyLog {
   id               Int     @id @default(autoincrement())
-  date             String  @unique
+  userId           Int
+  date             String
   workout          Boolean @default(false)
   ifCompleted      Boolean @default(false)
   proteinCompleted Boolean @default(false)
@@ -37,4 +42,7 @@ model DailyLog {
   sleepCompleted   Boolean @default(false)
   noSnack          Boolean @default(false)
   notes            String?
+  user             User    @relation(fields: [userId], references: [id])
+
+  @@unique([userId, date])
 }
