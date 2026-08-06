@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Lean8.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+28a13c325833da5fbbc37dc8ce9e8c024e552859")]
 [assembly: System.Reflection.AssemblyProductAttribute("Lean8.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Lean8.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
