@@ -8,7 +8,7 @@ datasource db {
 }
 
 model User {
-  id                 Int        @id // 1 = Rian, 2 = Wahyu (fixed)
+  id                 Int        @id
   name               String
   heightCm           Float      @default(175)
   currentWeight      Float      @default(86)
@@ -16,8 +16,10 @@ model User {
   workoutTime        String?    @default("07:00")
   sleepTime          String?    @default("22:00")
   proteinTargetGrams Int        @default(120)
+  calorieTarget      Int        @default(2000)   // ← baru
   dailyLogs          DailyLog[]
   weightLogs         WeightLog[]
+  mealLogs           MealLog[]                  // ← baru
 }
 
 model WeightLog {
@@ -45,4 +47,29 @@ model DailyLog {
   user             User    @relation(fields: [userId], references: [id])
 
   @@unique([userId, date])
+}
+
+model FoodItem {
+  id       Int    @id @default(autoincrement())
+  name     String @unique
+  serving  String
+  calories Float
+  protein  Float
+  carbs    Float
+  fat      Float
+}
+
+model MealLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  date      String
+  mealType  String   // breakfast | lunch | dinner | snack
+  foodName  String
+  quantity  Float    @default(1)
+  calories  Float
+  protein   Float
+  carbs     Float
+  fat       Float
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 }

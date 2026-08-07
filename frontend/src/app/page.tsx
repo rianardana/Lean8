@@ -7,6 +7,7 @@ import { DailyCheckView } from "@/components/DailyCheckView";
 import { ProgressView } from "@/components/ProgressView";
 import { AiReviewView } from "@/components/AiReviewView";
 import { SettingsView } from "@/components/SettingsView";
+import { BmiVisual } from "@/components/BmiVisual";
 import { DashboardData } from "@/types";
 import { api } from "@/lib/api";
 
@@ -19,10 +20,19 @@ export default function Home() {
     try {
       const data = await api.getDashboard(activeUserId);
       setDashboardData(data);
-    } catch { /* fallback handled in api */ }
+    } catch { /* handled */ }
   };
 
-  useEffect(() => { refreshDashboard(); }, [activeTab, activeUserId]);
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        const data = await api.getDashboard(activeUserId);
+        if (isMounted) setDashboardData(data);
+      } catch { /* handled */ }
+    })();
+    return () => { isMounted = false; };
+  }, [activeTab, activeUserId]);
 
   return (
     <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-300">
@@ -36,7 +46,7 @@ export default function Home() {
               activeUserId === uid ? "bg-emerald-500 text-slate-950" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
             }`}
           >
-            {uid === 1 ? "🟢 Rian" : "🔵 Wahyu"}
+            {uid === 1 ? " Rian" : " Wahyu"}
           </button>
         ))}
       </div>
@@ -45,7 +55,14 @@ export default function Home() {
 
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-6 sm:py-8 space-y-6">
         {activeTab === "dashboard" && dashboardData && (
-          <DashboardView data={dashboardData} onNavigateToDaily={() => setActiveTab("daily")} onNavigateToAi={() => setActiveTab("aireview")} />
+          <>
+            <BmiVisual weight={dashboardData.currentWeight} heightCm={dashboardData.heightCm} />
+            <DashboardView
+              data={dashboardData}
+              onNavigateToDaily={() => setActiveTab("daily")}
+              onNavigateToAi={() => setActiveTab("aireview")}
+            />
+          </>
         )}
         {activeTab === "daily" && <DailyCheckView userId={activeUserId} onSaved={refreshDashboard} />}
         {activeTab === "progress" && <ProgressView userId={activeUserId} onWeightLogged={refreshDashboard} />}

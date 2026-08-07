@@ -5,6 +5,7 @@ export interface DashboardData {
   progressPercentage: number;
   activeDays: number;
   userHandshakeName: string;
+  heightCm: number;  
 }
 
 export interface DailyLogData {
@@ -40,4 +41,13 @@ export interface AiReviewData {
   date: string;
   actionablePoints: string[];
   rawSummary: string;
+}
+
+export interface FoodItemData {
+  id?: number; name: string; serving: string;
+  calories: number; protein: number; carbs: number; fat: number;
+}
+export interface MealLogData {
+  id?: number; date: string; mealType: string; foodName: string; quantity: number;
+  calories: number; protein: number; carbs: number; fat: number;
 }

@@ -1,4 +1,4 @@
-import { DashboardData, DailyLogData, WeightLogData, UserSettingsData, AiReviewData } from "@/types";
+import { DashboardData, DailyLogData, WeightLogData, UserSettingsData, AiReviewData, MealLogData, FoodItemData } from "@/types";
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, { ...options, headers: { "Content-Type": "application/json", ...options?.headers }, cache: "no-store" });
@@ -7,9 +7,17 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  async getDashboard(userId: number): Promise<DashboardData> {
-    const data = await request<{ user: { name: string; currentWeight: number; targetWeight: number; initialWeight: number }; stats: { currentWeight: number; targetWeight: number; progressPercent: number; dayNumber: number } }>(`/api/dashboard?userId=${userId}`);
-    return { currentWeight: data.stats.currentWeight, targetWeight: data.stats.targetWeight, startingWeight: data.user.initialWeight, progressPercentage: data.stats.progressPercent, activeDays: data.stats.dayNumber, userHandshakeName: data.user.name };
+   async getDashboard(userId: number): Promise<DashboardData> {
+    const data = await request<{ user: { name: string; currentWeight: number; targetWeight: number; initialWeight: number; heightCm: number }; stats: { currentWeight: number; targetWeight: number; progressPercent: number; dayNumber: number } }>(`/api/dashboard?userId=${userId}`);
+    return {
+      currentWeight: data.stats.currentWeight,
+      targetWeight: data.stats.targetWeight,
+      startingWeight: data.user.initialWeight,
+      progressPercentage: data.stats.progressPercent,
+      activeDays: data.stats.dayNumber,
+      userHandshakeName: data.user.name,
+      heightCm: data.user.heightCm,
+    };
   },
 
   async getDaily(userId: number, date: string): Promise<DailyLogData> {
@@ -37,6 +45,22 @@ export const api = {
   async saveSettings(userId: number, settings: UserSettingsData): Promise<UserSettingsData> {
     return request<UserSettingsData>(`/api/user?userId=${userId}`, { method: "POST", body: JSON.stringify(settings) });
   },
+
+  async searchFoods(q: string): Promise<FoodItemData[]> {
+  return request<FoodItemData[]>(`/api/foods?q=${encodeURIComponent(q)}`);
+},
+
+async getMeals(userId: number, date: string): Promise<MealLogData[]> {
+  return request<MealLogData[]>(`/api/meals?userId=${userId}&date=${date}`);
+},
+
+async logMeal(userId: number, meal: Omit<MealLogData, "id">): Promise<MealLogData> {
+  return request<MealLogData>(`/api/meals?userId=${userId}`, { method: "POST", body: JSON.stringify(meal) });
+},
+
+async deleteMeal(id: number): Promise<void> {
+  await request(`/api/meals?id=${id}`, { method: "DELETE" });
+},
 
   async getAiReview(userId: number, date: string): Promise<AiReviewData> {
     const todayLog = await this.getDaily(userId, date).catch(() => null);

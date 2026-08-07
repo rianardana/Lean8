@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { DailyLogData } from "@/types";
+import { CalorieTracker } from "@/components/CalorieTracker";
 import { api } from "@/lib/api";
 import { Dumbbell, Clock, Utensils, Droplets, Moon, Ban, Save, CheckCircle2, Calendar } from "lucide-react";
 
@@ -111,6 +112,7 @@ export const DailyCheckView: React.FC<DailyCheckViewProps> = ({ userId, onSaved 
         <textarea rows={2} value={log.notes || ""} onChange={(e) => setLog((prev) => ({ ...prev, notes: e.target.value }))} placeholder="Tuliskan kendala, rasanya fasting hari ini, atau mood latihan..." className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-600 resize-none" />
       </div>
 
+    <CalorieTracker userId={userId} />
       <div className="flex items-center justify-end gap-3 pt-2">
         {saveSuccess && (<span className="text-xs font-medium text-emerald-400 flex items-center gap-1.5 animate-fade-in"><CheckCircle2 className="w-4 h-4" /> Daily log tersimpan!</span>)}
         <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 hover:opacity-95 active:scale-95 transition-all disabled:opacity-50">
