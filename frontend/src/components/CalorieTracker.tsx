@@ -172,21 +172,21 @@ export const CalorieTracker: React.FC<{ userId: number }> = ({ userId }) => {
       </div>
 
       {/* TOMBOL FOTO MAKANAN */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <label className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold border transition ${
-          photoLeft === 0
-            ? "bg-slate-950 border-slate-800 text-slate-600 cursor-not-allowed"
-            : "bg-orange-500/10 border-orange-500/30 text-orange-400 cursor-pointer hover:bg-orange-500/20"
-        }`}>
-          <Camera className="w-4 h-4" />
-          {photoLoading ? "Menganalisis..." : `📸 Foto Makanan (${photoUsed}/${MAX_PHOTO_PER_DAY})`}
-          <input
-            type="file" accept="image/*" capture="environment" className="hidden"
-            onChange={handlePhoto} disabled={photoLoading || photoLeft === 0}
-          />
-        </label>
-        {photoMsg && <span className="text-[11px] text-rose-400">{photoMsg}</span>}
-      </div>
+<div className="flex flex-col items-center justify-center gap-2 pt-1">
+  <label className={`w-full sm:w-auto flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl text-sm font-bold border transition ${
+    photoLeft === 0
+      ? "bg-slate-950 border-slate-800 text-slate-600 cursor-not-allowed"
+      : "bg-orange-500/10 border-orange-500/30 text-orange-400 cursor-pointer hover:bg-orange-500/20 active:scale-95"
+  }`}>
+    <Camera className="w-5 h-5" />
+    {photoLoading ? "Menganalisis..." : `📸 Foto Makanan (${photoUsed}/${MAX_PHOTO_PER_DAY})`}
+    <input
+      type="file" accept="image/*" capture="environment" className="hidden"
+      onChange={handlePhoto} disabled={photoLoading || photoLeft === 0}
+    />
+  </label>
+  {photoMsg && <span className="text-[11px] text-rose-400 text-center">{photoMsg}</span>}
+</div>
 
       {/* Log makanan hari ini */}
       {meals.length > 0 && (
