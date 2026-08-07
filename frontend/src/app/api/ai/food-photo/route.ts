@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-const MODEL = 'gemini-2.5-flash' // free tier. Kalau error model, ganti 'gemini-2.0-flash'
+const MODEL = 'gemini-3.5-flash'
 const MAX_PHOTO_PER_DAY = 100
 
 function todayKey() {
@@ -43,7 +43,11 @@ export async function POST(req: NextRequest) {
     }
   )
 
-  if (!res.ok) return NextResponse.json({ error: 'AI failed' }, { status: 502 })
+  if (!res.ok) {
+  const detail = await res.text()
+  console.error('GEMINI ERROR:', res.status, detail)
+  return NextResponse.json({ error: 'AI failed', detail, status: res.status }, { status: 502 })
+}
 
   const data = await res.json()
   const text: string = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}'

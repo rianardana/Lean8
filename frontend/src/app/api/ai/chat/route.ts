@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-const MODEL = 'gemini-2.0-flash'
+const MODEL = 'gemini-3.5-flash'
 
 function todayKey() {
   const d = new Date()
@@ -96,8 +96,10 @@ Ingat: Kamu ahli nutrisi & diet, bukan general chatbot. Stay on topic.`
   )
 
   if (!res.ok) {
-    return NextResponse.json({ error: 'AI failed' }, { status: 502 })
-  }
+  const detail = await res.text()
+  console.error('GEMINI ERROR:', res.status, detail)
+  return NextResponse.json({ error: 'AI failed', detail, status: res.status }, { status: 502 })
+}
 
   const data = await res.json()
   const reply: string = data.candidates?.[0]?.content?.parts?.[0]?.text ?? 'Maaf, saya tidak bisa menjawab itu.'
