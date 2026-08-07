@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { FoodItemData, MealLogData } from "@/types";
-import { Flame, Search, Plus, Trash2, Coffee, Sun, Moon, Cookie } from "lucide-react";
+import { Flame, Search, Plus, Trash2, Coffee, Sun, Moon, Cookie, Camera } from "lucide-react";
 
 const MEALS = [
   { id: "breakfast", label: "Sarapan", icon: Coffee },
@@ -11,6 +11,23 @@ const MEALS = [
   { id: "dinner", label: "Malam", icon: Moon },
   { id: "snack", label: "Camilan", icon: Cookie },
 ];
+
+const MAX_PHOTO_PER_DAY = 100;
+
+function resizeImage(file: File, maxDim = 1024): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", 0.8));
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
 
 export const CalorieTracker: React.FC<{ userId: number }> = ({ userId }) => {
   const todayStr = new Date().toISOString().split("T")[0];
@@ -20,25 +37,41 @@ export const CalorieTracker: React.FC<{ userId: number }> = ({ userId }) => {
   const [meals, setMeals] = useState<MealLogData[]>([]);
   const [mealType, setMealType] = useState("breakfast");
   const [target, setTarget] = useState(2000);
+  const [photoLoading, setPhotoLoading] = useState(false);
+  const [photoMsg, setPhotoMsg] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      const data = await api.getMeals(userId, date);
+      if (isMounted) setMeals(data);
+    })();
+    return () => { isMounted = false; };
+  }, [userId, date]);
+
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        const s = await api.getSettings(userId);
+        if (isMounted) setTarget((s as { calorieTarget?: number }).calorieTarget ?? 2000);
+      } catch { /* ignore */ }
+    })();
+    return () => { isMounted = false; };
+  }, [userId]);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (query.trim().length >= 2) api.searchFoods(query).then(setResults).catch(() => setResults([]));
+      else setResults([]);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [query]);
 
   const refresh = async () => {
     const data = await api.getMeals(userId, date);
     setMeals(data);
   };
-
-  useEffect(() => { refresh(); }, [userId, date]);
-
-  useEffect(() => {
-    api.getSettings(userId).then((s) => setTarget((s as { calorieTarget?: number }).calorieTarget ?? 2000)).catch(() => {});
-  }, [userId]);
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      if (query.trim().length >= 2) api.searchFoods(query).then(setResults).catch(() => {});
-      else setResults([]);
-    }, 250);
-    return () => clearTimeout(t);
-  }, [query]);
 
   const addFood = async (food: FoodItemData) => {
     await api.logMeal(userId, {
@@ -54,11 +87,34 @@ export const CalorieTracker: React.FC<{ userId: number }> = ({ userId }) => {
     await refresh();
   };
 
+  const handlePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoLoading(true); setPhotoMsg("");
+    try {
+      const base64 = await resizeImage(file);
+      const r = await api.analyzeFoodPhoto(base64, userId);
+      await api.logMeal(userId, {
+        date, mealType, foodName: `📸 ${r.name}`, quantity: 1,
+        calories: r.calories, protein: r.protein, carbs: r.carbs, fat: r.fat,
+      });
+      await refresh();
+    } catch (err) {
+      const msg = String(err);
+      setPhotoMsg(msg.includes("429") ? `Limit foto hari ini habis (${MAX_PHOTO_PER_DAY}/${MAX_PHOTO_PER_DAY}). Input manual dulu ya!` : "Analisis gagal — coba input manual.");
+    }
+    setPhotoLoading(false);
+    e.target.value = "";
+  };
+
   const totals = meals.reduce(
     (acc, m) => ({ calories: acc.calories + m.calories, protein: acc.protein + m.protein, carbs: acc.carbs + m.carbs, fat: acc.fat + m.fat }),
     { calories: 0, protein: 0, carbs: 0, fat: 0 }
   );
   const pct = Math.min(100, (totals.calories / target) * 100);
+
+  const photoUsed = meals.filter((m) => m.foodName.startsWith("📸")).length;
+  const photoLeft = Math.max(0, MAX_PHOTO_PER_DAY - photoUsed);
 
   return (
     <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-6 space-y-4">
@@ -113,6 +169,23 @@ export const CalorieTracker: React.FC<{ userId: number }> = ({ userId }) => {
             ))}
           </div>
         )}
+      </div>
+
+      {/* TOMBOL FOTO MAKANAN */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <label className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold border transition ${
+          photoLeft === 0
+            ? "bg-slate-950 border-slate-800 text-slate-600 cursor-not-allowed"
+            : "bg-orange-500/10 border-orange-500/30 text-orange-400 cursor-pointer hover:bg-orange-500/20"
+        }`}>
+          <Camera className="w-4 h-4" />
+          {photoLoading ? "Menganalisis..." : `📸 Foto Makanan (${photoUsed}/${MAX_PHOTO_PER_DAY})`}
+          <input
+            type="file" accept="image/*" capture="environment" className="hidden"
+            onChange={handlePhoto} disabled={photoLoading || photoLeft === 0}
+          />
+        </label>
+        {photoMsg && <span className="text-[11px] text-rose-400">{photoMsg}</span>}
       </div>
 
       {/* Log makanan hari ini */}

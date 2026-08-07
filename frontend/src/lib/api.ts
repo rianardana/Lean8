@@ -24,6 +24,10 @@ export const api = {
     return request<DailyLogData>(`/api/daily?userId=${userId}&date=${date}`);
   },
 
+  async analyzeFoodPhoto(imageBase64: string, userId: number): Promise<{ name: string; serving: string; calories: number; protein: number; carbs: number; fat: number }> {
+  return request(`/api/ai/food-photo`, { method: "POST", body: JSON.stringify({ image: imageBase64, userId }) });
+},
+
   async saveDaily(userId: number, log: DailyLogData): Promise<DailyLogData> {
     return request<DailyLogData>(`/api/daily?userId=${userId}`, { method: "POST", body: JSON.stringify(log) });
   },
@@ -32,6 +36,9 @@ export const api = {
     return request<WeightLogData[]>(`/api/weight?userId=${userId}`);
   },
 
+  async chatCoach(messages: { role: 'user' | 'assistant'; content: string }[], userId: number): Promise<{ reply: string }> {
+  return request(`/api/ai/chat`, { method: "POST", body: JSON.stringify({ messages, userId }) });
+},
   async logWeight(userId: number, weight: number, date?: string): Promise<WeightLogData> {
     const targetDate = date || new Date().toISOString().split("T")[0];
     return request<WeightLogData>(`/api/weight?userId=${userId}`, { method: "POST", body: JSON.stringify({ weight, date: targetDate }) });
