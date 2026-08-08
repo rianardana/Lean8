@@ -52,6 +52,9 @@ export const api = {
   async saveSettings(userId: number, settings: UserSettingsData): Promise<UserSettingsData> {
     return request<UserSettingsData>(`/api/user?userId=${userId}`, { method: "POST", body: JSON.stringify(settings) });
   },
+async estimateFood(query: string): Promise<{ name: string; quantity: number; calories: number; protein: number; carbs: number; fat: number; perServing: number }> {
+  return request(`/api/ai/food-estimate`, { method: "POST", body: JSON.stringify({ query }) });
+},
 
   async searchFoods(q: string): Promise<FoodItemData[]> {
   return request<FoodItemData[]>(`/api/foods?q=${encodeURIComponent(q)}`);
