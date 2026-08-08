@@ -56,6 +56,10 @@ async estimateFood(query: string): Promise<{ name: string; quantity: number; cal
   return request(`/api/ai/food-estimate`, { method: "POST", body: JSON.stringify({ query }) });
 },
 
+async getAiReviewPersonal(userId: number): Promise<{ date: string; review: string }> {
+  return request(`/api/ai/review`, { method: "POST", body: JSON.stringify({ userId }) });
+},
+
   async searchFoods(q: string): Promise<FoodItemData[]> {
   return request<FoodItemData[]>(`/api/foods?q=${encodeURIComponent(q)}`);
 },

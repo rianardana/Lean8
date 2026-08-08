@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { AiReviewData } from "@/types";
 import { api } from "@/lib/api";
 import { Sparkles, Bot, CheckCircle2, ArrowRight, MessageCircle, Send } from "lucide-react";
 
@@ -14,11 +13,10 @@ interface Message {
 
 export const AiReviewView: React.FC<{ userId: number }> = ({ userId }) => {
   const [mode, setMode] = useState<Mode>('review');
-  
-  // Review state
-  const todayStr = new Date().toISOString().split("T")[0];
+
+  // Review state — sekarang personal AI (bukan pool manual)
   const [reviewLoading, setReviewLoading] = useState(false);
-  const [review, setReview] = useState<AiReviewData | null>(null);
+  const [review, setReview] = useState<{ date: string; review: string } | null>(null);
 
   // Chat state
   const [messages, setMessages] = useState<Message[]>([]);
@@ -28,7 +26,7 @@ export const AiReviewView: React.FC<{ userId: number }> = ({ userId }) => {
   const handleReview = async () => {
     setReviewLoading(true);
     try {
-      setReview(await api.getAiReview(userId, todayStr));
+      setReview(await api.getAiReviewPersonal(userId));
     } finally {
       setReviewLoading(false);
     }
@@ -79,7 +77,7 @@ export const AiReviewView: React.FC<{ userId: number }> = ({ userId }) => {
         </button>
       </div>
 
-      {/* REVIEW MODE */}
+      {/* REVIEW MODE — AI PERSONAL */}
       {mode === 'review' && (
         <>
           <div className="bg-gradient-to-r from-slate-900 via-teal-950/40 to-slate-900 border border-teal-500/30 rounded-3xl p-6 sm:p-8 space-y-4 shadow-xl">
@@ -89,11 +87,11 @@ export const AiReviewView: React.FC<{ userId: number }> = ({ userId }) => {
               </div>
               <div>
                 <span className="text-xs font-mono text-teal-400 uppercase tracking-wider">Lean8 AI Coach</span>
-                <h2 className="text-2xl font-bold text-slate-100">Evaluasi & Insight Harian</h2>
+                <h2 className="text-2xl font-bold text-slate-100">Review Harian Personal</h2>
               </div>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed max-w-xl">
-              Personal coach berbasis AI tanpa motivasi kosong. Menganalisa data habit & tren berat badan Anda untuk menghasilkan maksimal 5 poin saran paling praktis.
+              Coach menganalisa makanan, habit, dan tren berat badanmu hari ini — lalu ngobrol natural soal progresmu. Bukan template, beneran personal.
             </p>
             <button
               onClick={handleReview}
@@ -101,7 +99,7 @@ export const AiReviewView: React.FC<{ userId: number }> = ({ userId }) => {
               className="group flex items-center gap-2.5 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-teal-400 via-emerald-400 to-cyan-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-teal-500/20 hover:opacity-95 active:scale-95 transition-all disabled:opacity-50"
             >
               <Sparkles className="w-5 h-5 animate-spin-slow" />
-              <span>{reviewLoading ? "Menganalisis Data..." : "Review Hari Ini"}</span>
+              <span>{reviewLoading ? "Coach lagi merhatiin harimu..." : "Review Hari Ini"}</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
@@ -109,37 +107,23 @@ export const AiReviewView: React.FC<{ userId: number }> = ({ userId }) => {
           {reviewLoading && (
             <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-8 text-center space-y-3">
               <div className="w-10 h-10 border-3 border-teal-400 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-xs text-slate-400 font-mono">Menelaah checklist & grafik berat badan Anda...</p>
+              <p className="text-xs text-slate-400 font-mono">Membaca makanan, habit & tren beratmu...</p>
             </div>
           )}
 
           {!reviewLoading && review && (
-            <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-6 sm:p-8 space-y-6 animate-fade-in shadow-2xl">
+            <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-6 sm:p-8 space-y-5 animate-fade-in shadow-2xl">
               <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                 <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-teal-400" />
-                  <span>{review.actionablePoints.length} Poin Praktis Coach</span>
+                  <span>Pesan Coach Untukmu</span>
                 </h3>
-                <span className="text-xs font-mono text-slate-400 bg-slate-950 px-3 py-1 rounded-xl border border-slate-800">
-                  {review.date}
-                </span>
+                <span className="text-xs font-mono text-slate-400 bg-slate-950 px-3 py-1 rounded-xl border border-slate-800">{review.date}</span>
               </div>
-              <div className="space-y-3">
-                {review.actionablePoints.map((point, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start gap-3.5 p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80 hover:border-teal-500/30 transition-colors"
-                  >
-                    <div className="w-7 h-7 rounded-xl bg-teal-500/10 text-teal-400 font-mono font-bold text-xs flex items-center justify-center shrink-0 border border-teal-500/20">
-                      0{index + 1}
-                    </div>
-                    <p className="text-xs text-slate-200 leading-relaxed pt-0.5">{point}</p>
-                  </div>
-                ))}
-              </div>
+              <p className="text-sm text-slate-200 leading-relaxed whitespace-pre-line">{review.review}</p>
               <div className="flex items-center gap-2 text-[11px] text-slate-500 pt-2 border-t border-slate-800/60">
                 <CheckCircle2 className="w-3.5 h-3.5 text-teal-400" />
-                <span>Fokus pada eksekusi 1-2 saran utama untuk menjaga momentum konsistensi Anda.</span>
+                <span>Review ini disusun dari data aslimu hari ini — makin rajin isi log, makin personal sarannya.</span>
               </div>
             </div>
           )}
@@ -159,7 +143,6 @@ export const AiReviewView: React.FC<{ userId: number }> = ({ userId }) => {
             </div>
           </div>
 
-          {/* Messages */}
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {messages.length === 0 && (
               <div className="text-center py-8 text-slate-500 text-sm">
@@ -192,7 +175,6 @@ export const AiReviewView: React.FC<{ userId: number }> = ({ userId }) => {
             )}
           </div>
 
-          {/* Input */}
           <form onSubmit={handleChat} className="flex gap-2">
             <input
               type="text"
