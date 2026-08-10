@@ -1,62 +1,48 @@
 "use client";
 
 import React from "react";
-import { LayoutDashboard, CheckSquare, TrendingDown, Sparkles, Settings } from "lucide-react";
+import { LayoutDashboard, CheckSquare, Flame, TrendingDown, Sparkles, Settings } from "lucide-react";
 
-export type TabType = "dashboard" | "daily" | "progress" | "aireview" | "settings";
+export type TabType = "dashboard" | "daily" | "nutrition" | "progress" | "aireview" | "settings";
 
 interface NavbarProps {
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
 }
 
+const TABS = [
+  { id: "dashboard", label: "Home", icon: LayoutDashboard },
+  { id: "daily", label: "Habit", icon: CheckSquare },
+  { id: "nutrition", label: "Kalori", icon: Flame },
+  { id: "progress", label: "Progres", icon: TrendingDown },
+  { id: "aireview", label: "Coach", icon: Sparkles },
+  { id: "settings", label: "Setting", icon: Settings },
+] as const;
+
 export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
-  const tabs = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "daily", label: "Daily Check", icon: CheckSquare },
-    { id: "progress", label: "Progress", icon: TrendingDown },
-    { id: "aireview", label: "AI Review", icon: Sparkles },
-    { id: "settings", label: "Settings", icon: Settings },
-  ] as const;
-
   return (
-    <header className="sticky top-0 z-50 bg-[#0b0f17]/80 backdrop-blur-xl border-b border-emerald-900/30 px-4 py-3">
-      <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-        {/* Brand Header */}
-        <div className="flex items-center gap-2.5">
-             <img src="/logo.png" alt="Lean8 Logo" className="h-8 w-8" />
-          <div>
-            <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-slate-100 via-emerald-200 to-teal-400 bg-clip-text text-transparent">
-              LEAN8
-            </h1>
-            <p className="text-[10px] text-emerald-400/70 font-mono tracking-wider uppercase">
-              Consistency Over Perfection
-            </p>
-          </div>
-        </div>
-
-        {/* Tab Navigation */}
-        <nav className="flex items-center gap-1 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800/80 shadow-inner w-full sm:w-auto overflow-x-auto">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as TabType)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium transition-all duration-200 whitespace-nowrap ${
-                  isActive
-                    ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-semibold shadow-md shadow-emerald-500/20 scale-[1.02]"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? "text-slate-950" : "text-slate-400"}`} />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0b0f17]/95 backdrop-blur-xl border-t border-emerald-900/30 safe-area-pb">
+      <div className="max-w-4xl mx-auto flex items-stretch justify-around px-1 py-1.5">
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as TabType)}
+              className={`relative flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 rounded-xl transition-all duration-200 ${
+                isActive ? "text-emerald-400" : "text-slate-500 hover:text-slate-300"
+              }`}
+            >
+              {isActive && (
+                <span className="absolute top-0 w-7 h-0.5 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full" />
+              )}
+              <Icon className={`w-5 h-5 transition-transform ${isActive ? "scale-110" : ""}`} strokeWidth={isActive ? 2.5 : 2} />
+              <span className={`text-[10px] font-medium leading-none ${isActive ? "text-emerald-400" : ""}`}>{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
-    </header>
+    </nav>
   );
 };
