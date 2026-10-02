@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getSessionUserId } from '@/lib/session'
 import { callGemini } from '@/lib/gemini'
 
 const MAX_PHOTO_PER_DAY = 100
@@ -10,7 +11,9 @@ function todayKey() {
 }
 
 export async function POST(req: NextRequest) {
-  const { image, userId = 1 } = (await req.json()) as { image: string; userId?: number }
+  const userId = await getSessionUserId()
+  if (userId == null) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { image } = (await req.json()) as { image: string }
   if (!image) return NextResponse.json({ error: 'image required' }, { status: 400 })
 
   const used = await prisma.mealLog.count({

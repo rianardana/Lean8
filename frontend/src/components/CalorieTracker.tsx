@@ -29,7 +29,7 @@ function resizeImage(file: File, maxDim = 1024): Promise<string> {
   });
 }
 
-export const CalorieTracker: React.FC<{ userId: number }> = ({ userId }) => {
+export const CalorieTracker: React.FC = () => {
   const todayStr = new Date().toISOString().split("T")[0];
   const [date, setDate] = useState(todayStr);
   const [query, setQuery] = useState("");
@@ -44,22 +44,22 @@ export const CalorieTracker: React.FC<{ userId: number }> = ({ userId }) => {
   useEffect(() => {
     let isMounted = true;
     (async () => {
-      const data = await api.getMeals(userId, date);
+      const data = await api.getMeals(date);
       if (isMounted) setMeals(data);
     })();
     return () => { isMounted = false; };
-  }, [userId, date]);
+  }, [date]);
 
   useEffect(() => {
     let isMounted = true;
     (async () => {
       try {
-        const s = await api.getSettings(userId);
+        const s = await api.getSettings();
         if (isMounted) setTarget((s as { calorieTarget?: number }).calorieTarget ?? 2000);
       } catch { /* ignore */ }
     })();
     return () => { isMounted = false; };
-  }, [userId]);
+  }, []);
 
   useEffect(() => {
     const t = setTimeout(async () => {
@@ -88,12 +88,12 @@ export const CalorieTracker: React.FC<{ userId: number }> = ({ userId }) => {
   }, [query]);
 
   const refresh = async () => {
-    const data = await api.getMeals(userId, date);
+    const data = await api.getMeals(date);
     setMeals(data);
   };
 
   const addFood = async (food: FoodItemData) => {
-    await api.logMeal(userId, {
+    await api.logMeal({
       date, mealType, foodName: food.name, quantity: 1,
       calories: food.calories, protein: food.protein, carbs: food.carbs, fat: food.fat,
     });
@@ -112,8 +112,8 @@ export const CalorieTracker: React.FC<{ userId: number }> = ({ userId }) => {
     setPhotoLoading(true); setPhotoMsg("");
     try {
       const base64 = await resizeImage(file);
-      const r = await api.analyzeFoodPhoto(base64, userId);
-      await api.logMeal(userId, {
+      const r = await api.analyzeFoodPhoto(base64);
+      await api.logMeal({
         date, mealType, foodName: `📸 ${r.name}`, quantity: 1,
         calories: r.calories, protein: r.protein, carbs: r.carbs, fat: r.fat,
       });
@@ -136,22 +136,22 @@ export const CalorieTracker: React.FC<{ userId: number }> = ({ userId }) => {
   const photoLeft = Math.max(0, MAX_PHOTO_PER_DAY - photoUsed);
 
   return (
-    <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-6 space-y-4">
+    <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-xs font-mono text-orange-400 uppercase tracking-wider">Tracker Kalori</span>
-          <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2"><Flame className="w-5 h-5 text-orange-400" /> Makanan Hari Ini</h3>
+          <span className="text-xs font-mono text-orange-600 uppercase tracking-wider">Tracker Kalori</span>
+          <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2"><Flame className="w-5 h-5 text-orange-600" /> Makanan Hari Ini</h3>
         </div>
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-slate-950 px-3 py-2 rounded-xl border border-slate-800 text-xs font-mono text-slate-200 focus:outline-none" />
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none" />
       </div>
 
       {/* Progress kalori */}
       <div className="space-y-1.5">
         <div className="flex justify-between text-xs font-semibold">
-          <span className="text-slate-400">{Math.round(totals.calories)} / {target} kcal</span>
-          <span className="text-orange-400 font-mono">P {Math.round(totals.protein)}g • C {Math.round(totals.carbs)}g • F {Math.round(totals.fat)}g</span>
+          <span className="text-slate-500">{Math.round(totals.calories)} / {target} kcal</span>
+          <span className="text-orange-600 font-mono">P {Math.round(totals.protein)}g • C {Math.round(totals.carbs)}g • F {Math.round(totals.fat)}g</span>
         </div>
-        <div className="w-full h-3 bg-slate-950 rounded-full overflow-hidden p-0.5 border border-slate-800">
+        <div className="w-full h-3 bg-slate-50 rounded-full overflow-hidden p-0.5 border border-slate-200">
           <div className={`h-full rounded-full transition-all duration-300 ${totals.calories > target ? "bg-gradient-to-r from-rose-500 to-orange-500" : "bg-gradient-to-r from-orange-500 to-amber-400"}`} style={{ width: `${pct}%` }} />
         </div>
       </div>
@@ -162,7 +162,7 @@ export const CalorieTracker: React.FC<{ userId: number }> = ({ userId }) => {
           const Icon = m.icon;
           return (
             <button key={m.id} onClick={() => setMealType(m.id)}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition ${mealType === m.id ? "bg-orange-500 text-slate-950 border-orange-400" : "bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-600"}`}>
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition ${mealType === m.id ? "bg-orange-500 text-slate-950 border-orange-400" : "bg-slate-50 text-slate-500 border-slate-200 hover:border-slate-300"}`}>
               <Icon className="w-3.5 h-3.5" /> {m.label}
             </button>
           );
@@ -171,28 +171,28 @@ export const CalorieTracker: React.FC<{ userId: number }> = ({ userId }) => {
 
       {/* Search makanan — AI POWERED */}
       <div className="relative">
-        <div className="flex items-center gap-2 bg-slate-950 px-3.5 py-2.5 rounded-2xl border border-slate-800 focus-within:border-orange-500 transition-colors">
-          <Search className="w-4 h-4 text-orange-400" />
+        <div className="flex items-center gap-2 bg-slate-50 px-3.5 py-2.5 rounded-2xl border border-slate-200 focus-within:border-orange-500 transition-colors">
+          <Search className="w-4 h-4 text-orange-600" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Ketik apa aja... (donat cokelat 3, mie goreng jumbo, hamburger)"
-            className="bg-transparent text-xs text-slate-100 focus:outline-none w-full"
+            className="bg-transparent text-xs text-slate-900 focus:outline-none w-full"
           />
-          {aiLoading && <Sparkles className="w-4 h-4 text-orange-400 animate-pulse" />}
+          {aiLoading && <Sparkles className="w-4 h-4 text-orange-600 animate-pulse" />}
         </div>
         {results.length > 0 && (
-          <div className="absolute z-20 mt-1 w-full bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden shadow-2xl max-h-56 overflow-y-auto">
+          <div className="absolute z-20 mt-1 w-full bg-white border border-slate-300 rounded-2xl overflow-hidden shadow-2xl max-h-56 overflow-y-auto">
             {results.map((f) => (
-              <button key={f.id} onClick={() => addFood(f)} className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-slate-800 transition-colors">
+              <button key={f.id} onClick={() => addFood(f)} className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-slate-100 transition-colors">
                 <div>
-                  <p className="text-xs font-semibold text-slate-100 flex items-center gap-1.5">
+                  <p className="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
                     {f.name}
-                    <Sparkles className="w-3 h-3 text-orange-400" />
+                    <Sparkles className="w-3 h-3 text-orange-600" />
                   </p>
                   <p className="text-[10px] text-slate-500">{f.serving}</p>
                 </div>
-                <span className="text-xs font-mono text-orange-400 flex items-center gap-1">{f.calories} kcal <Plus className="w-3 h-3" /></span>
+                <span className="text-xs font-mono text-orange-600 flex items-center gap-1">{f.calories} kcal <Plus className="w-3 h-3" /></span>
               </button>
             ))}
           </div>
@@ -204,8 +204,8 @@ export const CalorieTracker: React.FC<{ userId: number }> = ({ userId }) => {
         <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
           <label className={`flex items-center justify-center gap-2 px-5 py-4 rounded-2xl text-sm font-bold border transition ${
             photoLeft === 0
-              ? "bg-slate-950 border-slate-800 text-slate-600 cursor-not-allowed"
-              : "bg-orange-500/10 border-orange-500/30 text-orange-400 cursor-pointer hover:bg-orange-500/20 active:scale-95"
+              ? "bg-slate-50 border-slate-200 text-slate-500 cursor-not-allowed"
+              : "bg-orange-500/10 border-orange-500/30 text-orange-600 cursor-pointer hover:bg-orange-500/20 active:scale-95"
           }`}>
             <Camera className="w-5 h-5" />
             {photoLoading ? "..." : "Kamera"}
@@ -214,8 +214,8 @@ export const CalorieTracker: React.FC<{ userId: number }> = ({ userId }) => {
 
           <label className={`flex items-center justify-center gap-2 px-5 py-4 rounded-2xl text-sm font-bold border transition ${
             photoLeft === 0
-              ? "bg-slate-950 border-slate-800 text-slate-600 cursor-not-allowed"
-              : "bg-orange-500/10 border-orange-500/30 text-orange-400 cursor-pointer hover:bg-orange-500/20 active:scale-95"
+              ? "bg-slate-50 border-slate-200 text-slate-500 cursor-not-allowed"
+              : "bg-orange-500/10 border-orange-500/30 text-orange-600 cursor-pointer hover:bg-orange-500/20 active:scale-95"
           }`}>
             <ImageIcon className="w-5 h-5" />
             {photoLoading ? "..." : "Gallery"}
@@ -226,7 +226,7 @@ export const CalorieTracker: React.FC<{ userId: number }> = ({ userId }) => {
         <span className="text-[11px] text-slate-500 font-mono">
           {photoLoading ? "Menganalisis..." : `${photoUsed}/${MAX_PHOTO_PER_DAY} foto hari ini`}
         </span>
-        {photoMsg && <span className="text-[11px] text-rose-400 text-center">{photoMsg}</span>}
+        {photoMsg && <span className="text-[11px] text-rose-600 text-center">{photoMsg}</span>}
       </div>
 
       {/* Log makanan hari ini */}
@@ -235,14 +235,14 @@ export const CalorieTracker: React.FC<{ userId: number }> = ({ userId }) => {
           {meals.map((m) => {
             const meal = MEALS.find((x) => x.id === m.mealType);
             return (
-              <div key={m.id} className="flex items-center justify-between bg-slate-950/70 border border-slate-800 rounded-2xl px-4 py-2.5">
+              <div key={m.id} className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5">
                 <div className="flex items-center gap-2.5">
-                  <span className="text-[10px] font-mono text-slate-500 bg-slate-900 px-2 py-0.5 rounded-lg border border-slate-800">{meal?.label ?? m.mealType}</span>
-                  <p className="text-xs font-semibold text-slate-200">{m.foodName}</p>
+                  <span className="text-[10px] font-mono text-slate-500 bg-white px-2 py-0.5 rounded-lg border border-slate-200">{meal?.label ?? m.mealType}</span>
+                  <p className="text-xs font-semibold text-slate-800">{m.foodName}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono text-orange-400">{m.calories} kcal</span>
-                  <button onClick={() => removeMeal(m.id!)} className="text-slate-600 hover:text-rose-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                  <span className="text-xs font-mono text-orange-600">{m.calories} kcal</span>
+                  <button onClick={() => removeMeal(m.id!)} className="text-slate-500 hover:text-rose-600 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
             );

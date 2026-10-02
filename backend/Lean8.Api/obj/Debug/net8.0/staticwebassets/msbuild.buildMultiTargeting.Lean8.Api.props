@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\Lean8.Api.props" />
-</Project>

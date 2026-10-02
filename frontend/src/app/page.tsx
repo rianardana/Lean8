@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Navbar, TabType } from "@/components/Navbar";
 import { DashboardView } from "@/components/DashboardView";
 import { DailyCheckView } from "@/components/DailyCheckView";
@@ -9,58 +10,75 @@ import { ProgressView } from "@/components/ProgressView";
 import { AiReviewView } from "@/components/AiReviewView";
 import { SettingsView } from "@/components/SettingsView";
 import { BmiVisual } from "@/components/BmiVisual";
+import { ConsistencyCard } from "@/components/ConsistencyCard";
 import { DashboardData } from "@/types";
 import { api } from "@/lib/api";
+import { authClient } from "@/lib/auth-client";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 export default function Home() {
+  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [activeUserId, setActiveUserId] = useState<1 | 2>(1); // 1=Rian, 2=Wahyu
 
   const refreshDashboard = async () => {
     try {
-      const data = await api.getDashboard(activeUserId);
+      const data = await api.getDashboard();
       setDashboardData(data);
     } catch { /* handled */ }
   };
 
   useEffect(() => {
+    if (!session) return;
     let isMounted = true;
     (async () => {
       try {
-        const data = await api.getDashboard(activeUserId);
+        const data = await api.getDashboard();
         if (isMounted) setDashboardData(data);
       } catch { /* handled */ }
     })();
     return () => { isMounted = false; };
-  }, [activeTab, activeUserId]);
+  }, [activeTab, session]);
+
+  const handleLogout = async () => {
+    await authClient.signOut();
+    router.push("/login");
+    router.refresh();
+  };
+
+  if (isPending) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 text-sm animate-pulse">
+        Memuat...
+      </div>
+    );
+  }
+
+  const user = session?.user;
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-300">
-      {/* Header: Toggle User + Brand */}
-      <header className="sticky top-0 z-40 bg-[#090d16]/90 backdrop-blur-xl border-b border-slate-800/60 px-4 py-3">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-600">
+      {/* Header: Brand + User */}
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200 px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <img src="/logo.png" alt="Lean8 Logo" className="h-8 w-8" />
+            <img src="/Logo_LeanMode.png" alt="Lean Mode Logo" className="h-8 w-8" />
             <div>
-              <h1 className="text-lg font-bold tracking-tight bg-gradient-to-r from-slate-100 via-emerald-200 to-teal-400 bg-clip-text text-transparent leading-tight">
-                LEAN8
+              <h1 className="text-lg font-bold tracking-tight bg-gradient-to-r from-slate-900 via-emerald-600 to-teal-600 bg-clip-text text-transparent leading-tight">
+                Lean Mode
               </h1>
-              <p className="text-[9px] text-emerald-400/70 font-mono tracking-wider uppercase">Consistency Over Perfection</p>
+              <p className="text-[9px] text-emerald-500 font-mono tracking-wider uppercase">Consistency Over Perfection</p>
             </div>
           </div>
-          <div className="flex gap-1.5">
-            {([1, 2] as const).map((uid) => (
-              <button
-                key={uid}
-                onClick={() => setActiveUserId(uid)}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${
-                  activeUserId === uid ? "bg-emerald-500 text-slate-950" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-                }`}
-              >
-                {uid === 1 ? "Rian" : "Wahyu"}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-slate-500">{user?.name ?? "User"}</span>
+            <button
+              onClick={handleLogout}
+              className="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-500 hover:bg-slate-100 transition"
+            >
+              Logout
+            </button>
           </div>
         </div>
       </header>
@@ -75,17 +93,20 @@ export default function Home() {
               onNavigateToDaily={() => setActiveTab("daily")}
               onNavigateToAi={() => setActiveTab("aireview")}
             />
+            <ConsistencyCard />
           </>
         )}
-        {activeTab === "daily" && <DailyCheckView userId={activeUserId} onSaved={refreshDashboard} />}
-        {activeTab === "nutrition" && <CalorieTracker userId={activeUserId} />}
-        {activeTab === "progress" && <ProgressView userId={activeUserId} onWeightLogged={refreshDashboard} />}
-        {activeTab === "aireview" && <AiReviewView userId={activeUserId} />}
-        {activeTab === "settings" && <SettingsView userId={activeUserId} onSaved={refreshDashboard} />}
+        {activeTab === "daily" && <DailyCheckView onSaved={refreshDashboard} />}
+        {activeTab === "nutrition" && <CalorieTracker />}
+        {activeTab === "progress" && <ProgressView onWeightLogged={refreshDashboard} />}
+        {activeTab === "aireview" && <AiReviewView />}
+        {activeTab === "settings" && <SettingsView onSaved={refreshDashboard} />}
       </main>
 
       {/* Bottom Navigation */}
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+
+      <InstallPrompt />
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getSessionUserId } from '@/lib/session'
 import { callGemini } from '@/lib/gemini'
 
 function dateKey(offset = 0) {
@@ -9,7 +10,8 @@ function dateKey(offset = 0) {
 }
 
 export async function POST(req: NextRequest) {
-  const { userId = 1 } = (await req.json()) as { userId?: number }
+  const userId = await getSessionUserId()
+  if (userId == null) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const today = dateKey(0)
 
   // --- KUMPULIN DATA REAL USER ---
@@ -67,7 +69,7 @@ Rekap 7 hari terakhir:
 === END DATA ===
 `
 
-  const prompt = `Kamu Lean8 Coach, personal coach nutrisi & fitness yang hangat dan jujur.
+  const prompt = `Kamu Lean Mode Coach, personal coach nutrisi & fitness yang hangat dan jujur.
 
 TUGAS: Beri review harian PERSONAL berdasarkan DATA USER di bawah. Bicara NATURAL seperti coach sungguhan yang merhatiin keseharian user — sebutkan hal spesifik yang dia lakukan (misal makanan yang dia makan, berapa hari gak workout, tren beratnya). JANGAN generik, JANGAN motivasi kosong.
 

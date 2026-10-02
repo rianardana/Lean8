@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import type { DailyLog } from '@prisma/client'
+import { getSessionUserId } from '@/lib/session'
+import { countCompleted } from '@/lib/stats'
 
 const DEFAULT_DAILY = {
   workout: false, ifCompleted: false, proteinCompleted: false,
   waterCompleted: false, sleepCompleted: false, noSnack: false, notes: null,
 }
 
-function countCompleted(log: DailyLog) {
-  return [log.workout, log.ifCompleted, log.proteinCompleted, log.waterCompleted, log.sleepCompleted, log.noSnack].filter(Boolean).length
-}
-
 export async function GET(req: NextRequest) {
-  const userId = Number(req.nextUrl.searchParams.get('userId') ?? 1)
+  const userId = await getSessionUserId()
+  if (userId == null) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const date = req.nextUrl.searchParams.get('date')
   if (!date) return NextResponse.json({ error: 'date required' }, { status: 400 })
 
@@ -22,7 +20,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const userId = Number(req.nextUrl.searchParams.get('userId') ?? 1)
+  const userId = await getSessionUserId()
+  if (userId == null) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const input = (await req.json()) as { date: string; workout?: boolean; ifCompleted?: boolean; proteinCompleted?: boolean; waterCompleted?: boolean; sleepCompleted?: boolean; noSnack?: boolean; notes?: string | null }
   if (!input.date) return NextResponse.json({ error: 'date required' }, { status: 400 })
 

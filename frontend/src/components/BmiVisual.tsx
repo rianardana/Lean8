@@ -24,7 +24,7 @@ export const BmiVisual: React.FC<{ weight: number; heightCm: number }> = ({ weig
   const pos = Math.min(100, Math.max(0, ((bmi - 14) / (40 - 14)) * 100));
 
   return (
-    <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-6">
+    <div className="bg-white border border-slate-200 rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-6">
       {/* Siluet tubuh — melebar/menyempit sesuai kategori */}
       <svg viewBox="0 0 100 200" className="w-24 h-48 shrink-0">
         <circle cx="50" cy="20" r="11" fill={meta.color} opacity={0.9} />
@@ -41,7 +41,7 @@ export const BmiVisual: React.FC<{ weight: number; heightCm: number }> = ({ weig
         <div className="flex items-end justify-between">
           <div>
             <span className="text-xs font-mono uppercase tracking-wider" style={{ color: meta.color }}>Kondisi Tubuh</span>
-            <h3 className="text-2xl font-bold text-slate-100">{meta.label}</h3>
+            <h3 className="text-2xl font-bold text-slate-900">{meta.label}</h3>
           </div>
           <div className="text-right">
             <p className="text-3xl font-black" style={{ color: meta.color }}>{bmi}</p>
@@ -61,7 +61,7 @@ export const BmiVisual: React.FC<{ weight: number; heightCm: number }> = ({ weig
           <span>14</span><span>18.5</span><span>25</span><span>30</span><span>40</span>
         </div>
 
-        <p className="text-xs text-slate-400 leading-relaxed">{meta.hint}</p>
+        <p className="text-xs text-slate-500 leading-relaxed">{meta.hint}</p>
       </div>
     </div>
   );

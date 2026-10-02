@@ -7,8 +7,8 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
-   async getDashboard(userId: number): Promise<DashboardData> {
-    const data = await request<{ user: { name: string; currentWeight: number; targetWeight: number; initialWeight: number; heightCm: number }; stats: { currentWeight: number; targetWeight: number; progressPercent: number; dayNumber: number } }>(`/api/dashboard?userId=${userId}`);
+  async getDashboard(): Promise<DashboardData> {
+    const data = await request<{ user: { name: string; currentWeight: number; targetWeight: number; initialWeight: number; heightCm: number }; stats: { currentWeight: number; targetWeight: number; progressPercent: number; dayNumber: number; eta?: { etaDays: number; etaDate: string } | null } }>(`/api/dashboard`);
     return {
       currentWeight: data.stats.currentWeight,
       targetWeight: data.stats.targetWeight,
@@ -17,67 +17,75 @@ export const api = {
       activeDays: data.stats.dayNumber,
       userHandshakeName: data.user.name,
       heightCm: data.user.heightCm,
+      etaDays: data.stats.eta?.etaDays ?? null,
+      etaDate: data.stats.eta?.etaDate ?? null,
     };
   },
 
-  async getDaily(userId: number, date: string): Promise<DailyLogData> {
-    return request<DailyLogData>(`/api/daily?userId=${userId}&date=${date}`);
+  async getDaily(date: string): Promise<DailyLogData> {
+    return request<DailyLogData>(`/api/daily?date=${date}`);
   },
 
-  async analyzeFoodPhoto(imageBase64: string, userId: number): Promise<{ name: string; serving: string; calories: number; protein: number; carbs: number; fat: number }> {
-  return request(`/api/ai/food-photo`, { method: "POST", body: JSON.stringify({ image: imageBase64, userId }) });
-},
-
-  async saveDaily(userId: number, log: DailyLogData): Promise<DailyLogData> {
-    return request<DailyLogData>(`/api/daily?userId=${userId}`, { method: "POST", body: JSON.stringify(log) });
+  async analyzeFoodPhoto(imageBase64: string): Promise<{ name: string; serving: string; calories: number; protein: number; carbs: number; fat: number }> {
+    return request(`/api/ai/food-photo`, { method: "POST", body: JSON.stringify({ image: imageBase64 }) });
   },
 
-  async getWeights(userId: number): Promise<WeightLogData[]> {
-    return request<WeightLogData[]>(`/api/weight?userId=${userId}`);
+  async saveDaily(log: DailyLogData): Promise<DailyLogData> {
+    return request<DailyLogData>(`/api/daily`, { method: "POST", body: JSON.stringify(log) });
   },
 
-  async chatCoach(messages: { role: 'user' | 'assistant'; content: string }[], userId: number): Promise<{ reply: string }> {
-  return request(`/api/ai/chat`, { method: "POST", body: JSON.stringify({ messages, userId }) });
-},
-  async logWeight(userId: number, weight: number, date?: string): Promise<WeightLogData> {
+  async getWeights(): Promise<WeightLogData[]> {
+    return request<WeightLogData[]>(`/api/weight`);
+  },
+
+  async getStats(): Promise<{ streak: number; days: { date: string; count: number }[] }> {
+    return request(`/api/stats`);
+  },
+
+  async chatCoach(messages: { role: 'user' | 'assistant'; content: string }[]): Promise<{ reply: string }> {
+    return request(`/api/ai/chat`, { method: "POST", body: JSON.stringify({ messages }) });
+  },
+
+  async logWeight(weight: number, date?: string): Promise<WeightLogData> {
     const targetDate = date || new Date().toISOString().split("T")[0];
-    return request<WeightLogData>(`/api/weight?userId=${userId}`, { method: "POST", body: JSON.stringify({ weight, date: targetDate }) });
+    return request<WeightLogData>(`/api/weight`, { method: "POST", body: JSON.stringify({ weight, date: targetDate }) });
   },
 
-  async getSettings(userId: number): Promise<UserSettingsData> {
-    const user = await request<UserSettingsData>(`/api/user?userId=${userId}`);
-    return user ?? { name: userId === 1 ? "Rian" : "Wahyu", heightCm: 175, currentWeight: 86, targetWeight: 65, workoutTime: "07:00", sleepTime: "22:00", proteinTargetGrams: 120 };
+  async getSettings(): Promise<UserSettingsData> {
+    const user = await request<UserSettingsData>(`/api/user`);
+    return user ?? { name: "User", heightCm: 175, currentWeight: 86, targetWeight: 65, workoutTime: "07:00", sleepTime: "22:00", proteinTargetGrams: 120 };
   },
 
-  async saveSettings(userId: number, settings: UserSettingsData): Promise<UserSettingsData> {
-    return request<UserSettingsData>(`/api/user?userId=${userId}`, { method: "POST", body: JSON.stringify(settings) });
+  async saveSettings(settings: UserSettingsData): Promise<UserSettingsData> {
+    return request<UserSettingsData>(`/api/user`, { method: "POST", body: JSON.stringify(settings) });
   },
-async estimateFood(query: string): Promise<{ name: string; quantity: number; calories: number; protein: number; carbs: number; fat: number; perServing: number }> {
-  return request(`/api/ai/food-estimate`, { method: "POST", body: JSON.stringify({ query }) });
-},
 
-async getAiReviewPersonal(userId: number): Promise<{ date: string; review: string }> {
-  return request(`/api/ai/review`, { method: "POST", body: JSON.stringify({ userId }) });
-},
+  async estimateFood(query: string): Promise<{ name: string; quantity: number; calories: number; protein: number; carbs: number; fat: number; perServing: number }> {
+    return request(`/api/ai/food-estimate`, { method: "POST", body: JSON.stringify({ query }) });
+  },
+
+  async getAiReviewPersonal(): Promise<{ date: string; review: string }> {
+    return request(`/api/ai/review`, { method: "POST", body: JSON.stringify({}) });
+  },
 
   async searchFoods(q: string): Promise<FoodItemData[]> {
-  return request<FoodItemData[]>(`/api/foods?q=${encodeURIComponent(q)}`);
-},
+    return request<FoodItemData[]>(`/api/foods?q=${encodeURIComponent(q)}`);
+  },
 
-async getMeals(userId: number, date: string): Promise<MealLogData[]> {
-  return request<MealLogData[]>(`/api/meals?userId=${userId}&date=${date}`);
-},
+  async getMeals(date: string): Promise<MealLogData[]> {
+    return request<MealLogData[]>(`/api/meals?date=${date}`);
+  },
 
-async logMeal(userId: number, meal: Omit<MealLogData, "id">): Promise<MealLogData> {
-  return request<MealLogData>(`/api/meals?userId=${userId}`, { method: "POST", body: JSON.stringify(meal) });
-},
+  async logMeal(meal: Omit<MealLogData, "id">): Promise<MealLogData> {
+    return request<MealLogData>(`/api/meals`, { method: "POST", body: JSON.stringify(meal) });
+  },
 
-async deleteMeal(id: number): Promise<void> {
-  await request(`/api/meals?id=${id}`, { method: "DELETE" });
-},
+  async deleteMeal(id: number): Promise<void> {
+    await request(`/api/meals?id=${id}`, { method: "DELETE" });
+  },
 
-  async getAiReview(userId: number, date: string): Promise<AiReviewData> {
-    const todayLog = await this.getDaily(userId, date).catch(() => null);
+  async getAiReview(date: string): Promise<AiReviewData> {
+    const todayLog = await this.getDaily(date).catch(() => null);
 
     const pool = {
       sleep: [

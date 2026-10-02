@@ -14,15 +14,15 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Lean8 — Consistency Over Perfection",
-    template: "%s | Lean8",
+    default: "Lean Mode — Consistency Over Perfection",
+    template: "%s | Lean Mode",
   },
-  description: "Personal habit tracker untuk transformasi tubuh lean. Tracking harian, kalori, dan progres Rian vs Wahyu.",
-  icons: { icon: "/favicon.ico" },
+  description: "Personal habit tracker untuk transformasi tubuh lean. Tracking harian, kalori, dan progres menuju tubuh ideal.",
+  icons: { icon: "/Logo_LeanMode.ico" },
 };
 
 export const viewport = {
-  themeColor: "#090d16",
+  themeColor: "#f8fafc",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -31,6 +31,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="manifest" href="/manifest.webmanifest" />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

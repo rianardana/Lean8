@@ -5,7 +5,9 @@ export interface DashboardData {
   progressPercentage: number;
   activeDays: number;
   userHandshakeName: string;
-  heightCm: number;  
+  heightCm: number;
+  etaDays?: number | null;
+  etaDate?: string | null;
 }
 
 export interface DailyLogData {
