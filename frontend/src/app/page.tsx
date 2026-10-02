@@ -15,12 +15,14 @@ import { DashboardData } from "@/types";
 import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { OnboardingTour } from "@/components/OnboardingTour";
 
 export default function Home() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [showTour, setShowTour] = useState(false);
 
   const refreshDashboard = async () => {
     try {
@@ -40,6 +42,19 @@ export default function Home() {
     })();
     return () => { isMounted = false; };
   }, [activeTab, session]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("welcome") === "1" && localStorage.getItem("leanmode_tour_seen") !== "1") {
+      setShowTour(true);
+    }
+  }, []);
+
+  const handleTourDone = () => {
+    localStorage.setItem("leanmode_tour_seen", "1");
+    setShowTour(false);
+    router.replace("/");
+  };
 
   const handleLogout = async () => {
     await authClient.signOut();
@@ -107,6 +122,8 @@ export default function Home() {
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <InstallPrompt />
+
+      {showTour && <OnboardingTour onDone={handleTourDone} />}
     </div>
   );
 };

@@ -29,7 +29,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center px-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white border border-slate-200 rounded-3xl p-8 space-y-5">
-        <div>
+        <div className="flex flex-col items-center text-center">
+          <img src="/Logo_LeanMode.png" alt="Lean Mode" className="w-20 h-20 rounded-2xl mb-3" />
           <h1 className="text-2xl font-bold tracking-tight">Lean Mode</h1>
           <p className="text-xs text-slate-500 mt-1">Masuk untuk lanjutkan progresmu.</p>
         </div>
