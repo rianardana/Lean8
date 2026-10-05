@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionUserId } from '@/lib/session'
 import { callGemini } from '@/lib/gemini'
+import { stripMarkdown } from '@/lib/text'
 
 function dateKey(offset = 0) {
   const d = new Date()
@@ -89,6 +90,7 @@ ATURAN:
 - Hormati Goal user: kalau BULKING jangan suruh defisit/puas, kalau CUTTING jangan suruh surplus.
 - Perhatikan Waktu sekarang. Kalau masih pagi/siang, JANGAN simpulkan user kurang makan/kalori — hari belum selesai, nilai secara proporsional.
 - Kalau user BARU (belum ada history), jangan vonis "minggu ini buruk". Sambut hangat dan arahkan hari ini.
+- JANGAN pakai markdown/format (tanpa ** atau * atau backtick). Tulis teks polos.
 - Bahasa Indonesia casual, to-the-point, pakai emoji secukupnya (1-2 aja).
 - Total jawaban max 6 kalimat. Jangan pakai bullet/list, tulis paragraf mengalir.
 
@@ -105,11 +107,12 @@ Sekarang beri review harian untuk ${user?.name ?? 'user'}:`
   }
 
   const data = await gem.res.json()
-  const review: string = (data.candidates?.[0]?.content?.parts ?? [])
+  const raw = (data.candidates?.[0]?.content?.parts ?? [])
     .filter((p: { text?: string }) => p.text)
     .map((p: { text?: string }) => p.text)
     .join('')
     .trim()
+  const review = stripMarkdown(raw)
 
   return NextResponse.json({ date: today, review: review || 'Gagal memuat review, coba lagi ya.' })
 }

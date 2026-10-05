@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionUserId } from '@/lib/session'
 import { callGemini } from '@/lib/gemini'
+import { stripMarkdown } from '@/lib/text'
 
 function todayKey() {
   const d = new Date()
@@ -85,7 +86,7 @@ ${todayLog?.notes ? `Catatan user: ${todayLog.notes}` : ''}
 
 SCOPE (HANYA jawab ini): nutrisi, kalori, masakan Indonesia, diet, IF, exercise, sleep, habit, progress.
 DI LUAR SCOPE (TOLAK SOPAN): politik, agama, diagnosa medis serius, pertanyaan personal tentang AI.
-STYLE: Bahasa Indonesia casual, to-the-point, pakai konteks user, actionable, max 3-4 kalimat.
+STYLE: Bahasa Indonesia casual, to-the-point, pakai konteks user, actionable, max 3-4 kalimat, tanpa markdown (no ** atau *).
 
 PENTING:
 - Hormati Goal user: BULKING jangan suruh defisit/puas, CUTTING jangan suruh surplus.
@@ -112,6 +113,6 @@ Ingat: kamu ahli nutrisi & diet, bukan general chatbot.`
   }
 
   const data = await gem.res.json()
-  const reply: string = data.candidates?.[0]?.content?.parts?.[0]?.text ?? 'Maaf, saya tidak bisa menjawab itu.'
+  const reply: string = stripMarkdown(data.candidates?.[0]?.content?.parts?.[0]?.text ?? 'Maaf, saya tidak bisa menjawab itu.')
   return NextResponse.json({ reply })
 }
