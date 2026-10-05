@@ -8,6 +8,7 @@ import { DailyCheckView } from "@/components/DailyCheckView";
 import { CalorieTracker } from "@/components/CalorieTracker";
 import { ProgressView } from "@/components/ProgressView";
 import { AiReviewView } from "@/components/AiReviewView";
+import { WorkoutView } from "@/components/WorkoutView";
 import { SettingsView } from "@/components/SettingsView";
 import { BmiVisual } from "@/components/BmiVisual";
 import { ConsistencyCard } from "@/components/ConsistencyCard";
@@ -115,6 +116,7 @@ export default function Home() {
         {activeTab === "nutrition" && <CalorieTracker />}
         {activeTab === "progress" && <ProgressView onWeightLogged={refreshDashboard} />}
         {activeTab === "aireview" && <AiReviewView />}
+        {activeTab === "workout" && <WorkoutView />}
         {activeTab === "settings" && <SettingsView onSaved={refreshDashboard} />}
       </main>
 

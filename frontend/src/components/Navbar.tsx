@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { LayoutDashboard, CheckSquare, Flame, TrendingDown, Sparkles, Settings } from "lucide-react";
+import { LayoutDashboard, CheckSquare, Flame, TrendingDown, Sparkles, Settings, Dumbbell } from "lucide-react";
 
-export type TabType = "dashboard" | "daily" | "nutrition" | "progress" | "aireview" | "settings";
+export type TabType = "dashboard" | "daily" | "nutrition" | "progress" | "aireview" | "workout" | "settings";
 
 interface NavbarProps {
   activeTab: TabType;
@@ -16,6 +16,7 @@ const TABS = [
   { id: "nutrition", label: "Kalori", icon: Flame },
   { id: "progress", label: "Progres", icon: TrendingDown },
   { id: "aireview", label: "Coach", icon: Sparkles },
+  { id: "workout", label: "Workout", icon: Dumbbell },
   { id: "settings", label: "Setting", icon: Settings },
 ] as const;
 
