@@ -8,7 +8,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 
 export const api = {
   async getDashboard(): Promise<DashboardData> {
-    const data = await request<{ user: { name: string; currentWeight: number; targetWeight: number; initialWeight: number; heightCm: number }; stats: { currentWeight: number; targetWeight: number; progressPercent: number; dayNumber: number; eta?: { etaDays: number; etaDate: string } | null } }>(`/api/dashboard`);
+    const data = await request<{ user: { name: string; currentWeight: number; targetWeight: number; initialWeight: number; heightCm: number; goal: string }; stats: { currentWeight: number; targetWeight: number; progressPercent: number; dayNumber: number; eta?: { etaDays: number; etaDate: string } | null } }>(`/api/dashboard`);
     return {
       currentWeight: data.stats.currentWeight,
       targetWeight: data.stats.targetWeight,
@@ -17,6 +17,7 @@ export const api = {
       activeDays: data.stats.dayNumber,
       userHandshakeName: data.user.name,
       heightCm: data.user.heightCm,
+      goal: (data.user.goal === "bulk" ? "bulk" : "cut") as "cut" | "bulk",
       etaDays: data.stats.eta?.etaDays ?? null,
       etaDate: data.stats.eta?.etaDate ?? null,
     };

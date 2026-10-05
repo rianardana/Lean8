@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { WORKOUTS, MUSCLE_GROUPS, WorkoutType, Exercise } from "@/data/workouts";
 import { Dumbbell, Play, Pause, RotateCcw, Timer, ChevronRight, ArrowLeft } from "lucide-react";
 
@@ -162,8 +163,8 @@ export const WorkoutView: React.FC = () => {
       )}
 
       {/* Detail gerakan */}
-      {selected && (
-        <div className="fixed inset-0 z-[60] bg-slate-50 overflow-y-auto">
+      {selected && createPortal(
+        <div className="fixed inset-0 z-[60] bg-slate-50 overflow-y-auto overscroll-contain">
           <div className="max-w-3xl mx-auto min-h-screen">
             <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-xl border-b border-slate-200 px-4 py-3 flex items-center gap-3">
               <button onClick={() => setSelected(null)} className="p-2 rounded-full hover:bg-slate-100 transition" aria-label="Kembali">
@@ -172,7 +173,7 @@ export const WorkoutView: React.FC = () => {
               <h2 className="text-base font-bold text-slate-900">{selected.name}</h2>
             </div>
 
-            <div className="px-4 py-5 space-y-4">
+            <div className="px-4 py-5 pb-28 space-y-4">
               {selected.gif ? (
                 <img src={selected.gif} alt={selected.name} loading="lazy" className="w-full h-56 object-contain rounded-2xl bg-slate-100" />
               ) : (
@@ -196,7 +197,8 @@ export const WorkoutView: React.FC = () => {
               <WorkoutTimer />
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

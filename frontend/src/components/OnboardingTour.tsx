@@ -29,7 +29,7 @@ export const OnboardingTour: React.FC<{ onDone: () => void }> = ({ onDone }) => 
         </div>
 
         <div className="flex flex-col items-center text-center space-y-3 py-2">
-          <img src="/Logo_LeanMode.png" alt="Lean Mode" className="w-14 h-14 rounded-2xl" />
+          <img src="/mascot.webp" alt="Coach AI Lean Mode" className="h-28 w-auto" />
           <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-600">
             <StepIcon className="w-6 h-6" />
           </div>

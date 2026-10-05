@@ -15,8 +15,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onNavigateToDaily,
   onNavigateToAi,
 }) => {
-  const lostWeight = Math.max(0, data.startingWeight - data.currentWeight);
-  const remainingWeight = Math.max(0, data.currentWeight - data.targetWeight);
+  const isBulk = data.goal === "bulk";
+  const deltaFromStart = data.currentWeight - data.startingWeight; // + = naik, - = turun
+  const remainingWeight = Math.abs(data.currentWeight - data.targetWeight);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -57,7 +58,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Metric 2: Target Weight */}
         <div className="bg-white backdrop-blur-md border border-slate-200 rounded-2xl p-5 space-y-2 hover:border-slate-300 transition-all shadow-lg">
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-medium">Target Lean</span>
+            <span className="text-xs font-medium">{isBulk ? "Target Bulk" : "Target Lean"}</span>
             <div className="p-2 rounded-xl bg-teal-500/10 text-teal-600">
               <Target className="w-4 h-4" />
             </div>
@@ -81,7 +82,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span className="text-3xl font-black text-slate-900">{data.progressPercentage.toFixed(1)}</span>
             <span className="text-xs font-semibold text-slate-500">%</span>
           </div>
-          <p className="text-[11px] text-slate-500">Turun: -{lostWeight.toFixed(1)} kg</p>
+          <p className="text-[11px] text-slate-500">{isBulk ? "Naik" : "Turun"}: {deltaFromStart >= 0 ? "+" : "-"}{Math.abs(deltaFromStart).toFixed(1)} kg</p>
         </div>
 
         {/* Metric 4: Active Days */}
@@ -104,7 +105,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-3">
         <div className="flex items-center justify-between text-xs font-semibold">
           <span className="text-slate-500">Target Visualizer ({data.startingWeight}kg → {data.targetWeight}kg)</span>
-          <span className="text-emerald-600 font-mono">{data.progressPercentage.toFixed(1)}% Terlampaui</span>
+          <span className="text-emerald-600 font-mono">{data.progressPercentage.toFixed(1)}% tercapai</span>
         </div>
         <div className="w-full h-4 bg-slate-50 rounded-full overflow-hidden p-0.5 border border-slate-200">
           <div
@@ -149,7 +150,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <h3 className="text-lg font-bold text-slate-900 group-hover:text-teal-600 transition-colors">
                 Minta AI Review Hari Ini
               </h3>
-              <p className="text-xs text-slate-500">Dapatkan 5 poin evaluasi praktis.</p>
+              <p className="text-xs text-slate-500">Diskusi dengan Coach AI.</p>
             </div>
             <div className="w-10 h-10 rounded-2xl bg-teal-500/10 text-teal-600 flex items-center justify-center group-hover:bg-teal-500 group-hover:text-slate-950 transition-all duration-200">
               <ArrowRight className="w-5 h-5" />

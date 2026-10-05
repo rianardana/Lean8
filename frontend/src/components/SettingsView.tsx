@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { UserSettingsData } from "@/types";
 import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
-import { Save, CheckCircle2, User, Target, Dumbbell, Moon, Utensils, Ruler } from "lucide-react";
+import { Save, CheckCircle2, User, Target, Dumbbell, Moon, Utensils, Ruler, Scale, TrendingDown, TrendingUp } from "lucide-react";
 
 interface SettingsViewProps {
   onSaved?: () => void;
@@ -21,7 +21,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaved }) => {
 
   const [settings, setSettings] = useState<UserSettingsData>({
     name: "Lean Mode User", heightCm: 175, currentWeight: 86, targetWeight: 65,
-    workoutTime: "07:00", sleepTime: "22:00", proteinTargetGrams: 120,
+    workoutTime: "07:00", sleepTime: "22:00", proteinTargetGrams: 120, goal: "cut",
   });
 
   useEffect(() => {
@@ -54,6 +54,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaved }) => {
           <h2 className="text-2xl font-bold text-slate-900">Pengaturan Personal</h2>
         </div>
         <form onSubmit={handleSave} className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-500">Mode Goal</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setSettings({ ...settings, goal: "cut" })}
+                className={`flex flex-col items-start gap-0.5 px-4 py-3 rounded-2xl border text-left transition-all ${settings.goal === "cut" ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-700" : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"}`}
+              >
+                <span className="text-xs font-bold flex items-center gap-1.5"><TrendingDown className="w-4 h-4" /> Cutting</span>
+                <span className="text-[10px]">Turun berat / lean</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSettings({ ...settings, goal: "bulk" })}
+                className={`flex flex-col items-start gap-0.5 px-4 py-3 rounded-2xl border text-left transition-all ${settings.goal === "bulk" ? "bg-amber-500/10 border-amber-500/40 text-amber-700" : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"}`}
+              >
+                <span className="text-xs font-bold flex items-center gap-1.5"><TrendingUp className="w-4 h-4" /> Bulking</span>
+                <span className="text-[10px]">Naik berat / otot</span>
+              </button>
+            </div>
+          </div>
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-500">Nama</label>
             <div className="flex items-center gap-2 bg-slate-50 px-3.5 py-2.5 rounded-2xl border border-slate-200 focus-within:border-emerald-500 transition-colors">
@@ -61,7 +82,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaved }) => {
               <input type="text" value={settings.name} onChange={(e) => setSettings({ ...settings, name: e.target.value })} className="bg-transparent text-xs text-slate-900 focus:outline-none w-full" required />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-500">Berat Badan (kg)</label>
+              <div className="flex items-center gap-2 bg-slate-50 px-3.5 py-2.5 rounded-2xl border border-slate-200 focus-within:border-emerald-500 transition-colors">
+                <Scale className="w-4 h-4 text-emerald-600" />
+                <input type="number" step="0.5" value={settings.currentWeight} onChange={(e) => setSettings({ ...settings, currentWeight: parseFloat(e.target.value) || 0 })} className="bg-transparent text-xs text-slate-900 focus:outline-none w-full" required />
+              </div>
+            </div>
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-500">Tinggi Badan (cm)</label>
               <div className="flex items-center gap-2 bg-slate-50 px-3.5 py-2.5 rounded-2xl border border-slate-200 focus-within:border-emerald-500 transition-colors">

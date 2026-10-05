@@ -30,6 +30,14 @@ export async function POST(req: NextRequest) {
     else break
   }
   const workoutDays7 = logs7.filter((l) => l.workout).length
+  const isBulk = user?.goal === 'bulk'
+  const hourNow = new Date().getHours()
+  const partOfDay = hourNow < 11 ? 'pagi' : hourNow < 15 ? 'siang' : hourNow < 19 ? 'sore' : 'malam'
+  const timeNow = `${String(hourNow).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')} (${partOfDay})`
+  const newUser = logs7.length === 0
+  const rekapBlock = newUser
+    ? 'User BARU — belum ada history minggu ini. Jangan menilai minggu ini buruk.'
+    : `- Hari workout: ${workoutDays7}/${logs7.length}\n- Streak tanpa workout di akhir: ${workoutStreakMissed} hari berturut-turut`
 
   // Tren berat
   const latestW = weights[0]?.weight
@@ -46,9 +54,11 @@ export async function POST(req: NextRequest) {
   const dataBlock = `
 === DATA USER HARI INI (${today}) ===
 Nama: ${user?.name ?? 'User'}
+Goal: ${isBulk ? 'BULKING (naik berat/otot)' : 'CUTTING (turun berat/lean)'}
 Berat sekarang: ${latestW ?? user?.currentWeight ?? '?'} kg | Target: ${user?.targetWeight ?? '?'} kg | Tinggi: ${user?.heightCm ?? '?'} cm
 Target protein: ${user?.proteinTargetGrams ?? '?'} g/hari
 
+Waktu sekarang: ${timeNow}
 Makanan hari ini: ${mealsSummary}
 Total kalori hari ini: ${Math.round(kcalToday)} kcal
 Protein masuk hari ini: ${Math.round(proteinToday)} g
@@ -57,15 +67,14 @@ Tren berat 7 hari: ${weightDelta === null ? 'data belum cukup' : `${weightDelta 
 
 Habit hari ini:
 - Workout: ${todayLog?.workout ? '✅' : '❌'}
-- Fasting: ${todayLog?.ifCompleted ? '✅' : '❌'}
+- ${isBulk ? 'Kalori surplus' : 'Fasting'}: ${todayLog?.ifCompleted ? '✅' : '❌'}
 - Protein target: ${todayLog?.proteinCompleted ? '✅' : '❌'}
 - Air 2.5L+: ${todayLog?.waterCompleted ? '✅' : '❌'}
 - Tidur 7-8 jam: ${todayLog?.sleepCompleted ? '✅' : '❌'}
-- No junk food: ${todayLog?.noSnack ? '✅' : '❌'}
+- ${isBulk ? 'Snack tambahan' : 'No junk food'}: ${todayLog?.noSnack ? '✅' : '❌'}
 
 Rekap 7 hari terakhir:
-- Hari workout: ${workoutDays7}/7
-- Streak tanpa workout di akhir: ${workoutStreakMissed} hari berturut-turut
+${rekapBlock}
 === END DATA ===
 `
 
@@ -77,6 +86,9 @@ ATURAN:
 - Buka dengan observasi spesifik dari datanya (max 2 kalimat).
 - Lalu 3-4 saran praktis & actionable yang nyambung sama kondisinya hari ini.
 - Kalau ada yang bagus, puji singkat. Kalau off-track, tegur halus tapi supportive.
+- Hormati Goal user: kalau BULKING jangan suruh defisit/puas, kalau CUTTING jangan suruh surplus.
+- Perhatikan Waktu sekarang. Kalau masih pagi/siang, JANGAN simpulkan user kurang makan/kalori — hari belum selesai, nilai secara proporsional.
+- Kalau user BARU (belum ada history), jangan vonis "minggu ini buruk". Sambut hangat dan arahkan hari ini.
 - Bahasa Indonesia casual, to-the-point, pakai emoji secukupnya (1-2 aja).
 - Total jawaban max 6 kalimat. Jangan pakai bullet/list, tulis paragraf mengalir.
 

@@ -6,6 +6,7 @@ export interface DashboardData {
   activeDays: number;
   userHandshakeName: string;
   heightCm: number;
+  goal: "cut" | "bulk";
   etaDays?: number | null;
   etaDate?: string | null;
 }
@@ -37,6 +38,7 @@ export interface UserSettingsData {
   workoutTime?: string;
   sleepTime?: string;
   proteinTargetGrams: number;
+  goal?: "cut" | "bulk";
 }
 
 export interface AiReviewData {

@@ -20,6 +20,11 @@ export const DailyCheckView: React.FC<DailyCheckViewProps> = ({ onSaved }) => {
     date: todayStr, workout: false, ifCompleted: false, proteinCompleted: false,
     waterCompleted: false, sleepCompleted: false, noSnack: false, notes: "",
   });
+  const [goal, setGoal] = useState<"cut" | "bulk">("cut");
+
+  useEffect(() => {
+    api.getSettings().then((s) => setGoal(s.goal ?? "cut")).catch(() => {});
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -45,13 +50,15 @@ export const DailyCheckView: React.FC<DailyCheckViewProps> = ({ onSaved }) => {
     } catch { /* handled */ } finally { setSaving(false); }
   };
 
+  const isBulk = goal === "bulk";
+
   const habits = [
     { id: "workout", title: "Workout / Movement", desc: "Latihan beban, kalistenik, atau jalan kaki 20+ menit", icon: Dumbbell, completed: log.workout, color: "text-emerald-600 bg-emerald-500/10 border-emerald-500/30" },
-    { id: "ifCompleted", title: "Intermittent Fasting", desc: "Patuhi jendela fasting 16:8 atau sesuai target", icon: Clock, completed: log.ifCompleted, color: "text-teal-600 bg-teal-500/10 border-teal-500/20" },
+    { id: "ifCompleted", title: isBulk ? "Kalori Surplus" : "Intermittent Fasting", desc: isBulk ? "Makan di atas maintenance, surplus 300-500 kcal" : "Patuhi jendela fasting 16:8 atau sesuai target", icon: Clock, completed: log.ifCompleted, color: "text-teal-600 bg-teal-500/10 border-teal-500/20" },
     { id: "proteinCompleted", title: "Protein Target", desc: "Tercapai asupan protein harian untuk memelihara otot", icon: Utensils, completed: log.proteinCompleted, color: "text-cyan-600 bg-cyan-500/10 border-cyan-500/20" },
     { id: "waterCompleted", title: "Air Putih", desc: "Minum minimal 2.5 - 3 Liter air putih per hari", icon: Droplets, completed: log.waterCompleted, color: "text-blue-600 bg-blue-500/10 border-blue-500/20" },
     { id: "sleepCompleted", title: "Tidur Cukup", desc: "Tidur 7-8 jam berkualitas & matikan layar tepat waktu", icon: Moon, completed: log.sleepCompleted, color: "text-indigo-600 bg-indigo-500/10 border-indigo-500/20" },
-    { id: "noSnack", title: "No Snack / Zero Junk", desc: "Bebas snack manis/olahan di luar jadwal makan utama", icon: Ban, completed: log.noSnack, color: "text-rose-600 bg-rose-500/10 border-rose-500/20" },
+    { id: "noSnack", title: isBulk ? "Snack Tambahan" : "No Snack / Zero Junk", desc: isBulk ? "Snack sehat / tambahan kalori untuk surplus" : "Bebas snack manis/olahan di luar jadwal makan utama", icon: Ban, completed: log.noSnack, color: "text-rose-600 bg-rose-500/10 border-rose-500/20" },
   ] as const;
 
   const completedCount = habits.filter((h) => h.completed).length;

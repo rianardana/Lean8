@@ -22,6 +22,7 @@ model User {
   sleepTime          String?    @default("22:00")
   proteinTargetGrams Int        @default(120)
   calorieTarget      Int        @default(2000)
+  goal               String     @default("cut") // cut | bulk
   dailyLogs          DailyLog[]
   weightLogs         WeightLog[]
   mealLogs           MealLog[]

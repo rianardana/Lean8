@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { api } from "@/lib/api";
-import { Sparkles, Bot, Send } from "lucide-react";
+import { Sparkles, Send, X } from "lucide-react";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -11,7 +11,7 @@ interface Message {
   reviewDate?: string;
 }
 
-export const AiReviewView: React.FC = () => {
+export const AiReviewView: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
@@ -75,33 +75,40 @@ export const AiReviewView: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto animate-fade-in flex flex-col h-[calc(100vh-180px)]">
+    <div className="max-w-3xl mx-auto flex flex-col h-full px-4 pt-4 pb-4">
       {/* Header Coach + Tombol Review */}
       <div className="flex items-center justify-between mb-4 shrink-0 gap-3">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-teal-500/10 text-teal-600 border border-teal-500/20">
-            <Bot className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-full bg-teal-500/10 border border-teal-500/20 flex items-center justify-center overflow-hidden">
+            <img src="/mascot.webp" alt="Coach" className="w-8 h-8 object-cover object-top rounded-full" />
           </div>
           <div>
             <h2 className="text-lg font-bold text-slate-900">Lean Mode Coach</h2>
             <p className="text-[11px] text-slate-500">Chat nutrisi & diet personal</p>
           </div>
         </div>
-        <button
-          onClick={handleReview}
-          disabled={reviewLoading || chatLoading}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-teal-400 to-emerald-400 text-slate-950 shadow-md shadow-teal-500/20 hover:opacity-95 active:scale-95 transition disabled:opacity-50 whitespace-nowrap"
-        >
-          <Sparkles className={`w-3.5 h-3.5 ${reviewLoading ? 'animate-spin' : ''}`} />
-          {reviewLoading ? 'Memuat...' : 'Review Coach'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleReview}
+            disabled={reviewLoading || chatLoading}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-teal-400 to-emerald-400 text-slate-950 shadow-md shadow-teal-500/20 hover:opacity-95 active:scale-95 transition disabled:opacity-50 whitespace-nowrap"
+          >
+            <Sparkles className={`w-3.5 h-3.5 ${reviewLoading ? 'animate-spin' : ''}`} />
+            {reviewLoading ? 'Memuat...' : 'Review Coach'}
+          </button>
+          {onClose && (
+            <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 transition" aria-label="Tutup">
+              <X className="w-4 h-4 text-slate-500" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Area Chat */}
       <div className="flex-1 overflow-y-auto space-y-3 pr-1 pb-2">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center space-y-3 px-6">
-            <Bot className="w-14 h-14 text-slate-500" />
+            <img src="/mascot.webp" alt="Coach AI" className="h-28 w-auto" />
             <div className="space-y-1">
               <p className="text-sm text-slate-500">Halo! Mau tanya apa hari ini?</p>
               <p className="text-xs text-slate-500">Atau klik <span className="text-teal-600 font-semibold">"Review Coach"</span> biar Coach rangkum progresmu.</p>
@@ -121,7 +128,10 @@ export const AiReviewView: React.FC = () => {
         )}
 
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <div key={i} className={`flex items-end gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            {msg.role === 'assistant' && (
+              <img src="/mascot.webp" alt="Coach" className="w-7 h-7 rounded-full object-cover object-top shrink-0 bg-teal-500/10" />
+            )}
             <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
               msg.role === 'user'
                 ? 'bg-teal-500 text-slate-950 font-medium'
@@ -151,20 +161,20 @@ export const AiReviewView: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Chat — sticky bawah */}
-      <form onSubmit={handleChat} className="flex gap-2 pt-3 shrink-0 border-t border-slate-200 mt-2">
+      {/* Input Chat — bubble melayang */}
+      <form onSubmit={handleChat} className="shrink-0 mt-2 mb-1 flex items-center gap-2 bg-white border border-slate-200 rounded-full p-1.5 pl-4 shadow-lg shadow-slate-900/5">
         <input
           type="text"
           value={chatInput}
           onChange={(e) => setChatInput(e.target.value)}
           placeholder="Tanya Coach sesuatu..."
           disabled={chatLoading}
-          className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-teal-500 disabled:opacity-50"
+          className="flex-1 bg-transparent text-sm text-slate-900 focus:outline-none disabled:opacity-50 placeholder:text-slate-400"
         />
         <button
           type="submit"
           disabled={!chatInput.trim() || chatLoading}
-          className="px-4 py-3 bg-teal-500 text-slate-950 rounded-2xl font-semibold disabled:opacity-50 hover:bg-teal-400 transition-colors"
+          className="w-10 h-10 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center shrink-0 disabled:opacity-40 hover:bg-teal-400 transition-colors"
         >
           <Send className="w-4 h-4" />
         </button>

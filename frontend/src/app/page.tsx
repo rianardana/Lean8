@@ -24,6 +24,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [showTour, setShowTour] = useState(false);
+  const [coachOpen, setCoachOpen] = useState(false);
 
   const refreshDashboard = async () => {
     try {
@@ -107,7 +108,7 @@ export default function Home() {
             <DashboardView
               data={dashboardData}
               onNavigateToDaily={() => setActiveTab("daily")}
-              onNavigateToAi={() => setActiveTab("aireview")}
+              onNavigateToAi={() => setCoachOpen(true)}
             />
             <ConsistencyCard />
           </>
@@ -115,13 +116,31 @@ export default function Home() {
         {activeTab === "daily" && <DailyCheckView onSaved={refreshDashboard} />}
         {activeTab === "nutrition" && <CalorieTracker />}
         {activeTab === "progress" && <ProgressView onWeightLogged={refreshDashboard} />}
-        {activeTab === "aireview" && <AiReviewView />}
         {activeTab === "workout" && <WorkoutView />}
         {activeTab === "settings" && <SettingsView onSaved={refreshDashboard} />}
       </main>
 
       {/* Bottom Navigation */}
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+
+      {/* Floating Coach bubble */}
+      <button
+        onClick={() => setCoachOpen(true)}
+        aria-label="Buka Coach AI"
+        className="fixed bottom-24 right-4 z-40 group"
+      >
+        <div className="relative w-14 h-14 rounded-full bg-white border-2 border-emerald-200 shadow-xl shadow-emerald-500/20 flex items-center justify-center overflow-hidden transition-transform group-hover:scale-105 group-active:scale-95">
+          <img src="/mascot.webp" alt="Coach AI" className="w-12 h-12 rounded-full object-cover object-top" />
+          <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
+        </div>
+      </button>
+
+      {/* Coach overlay */}
+      {coachOpen && (
+        <div className="fixed inset-0 z-[60] bg-slate-50">
+          <AiReviewView onClose={() => setCoachOpen(false)} />
+        </div>
+      )}
 
       <InstallPrompt />
 

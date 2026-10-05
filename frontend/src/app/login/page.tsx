@@ -30,9 +30,13 @@ export default function LoginPage() {
     <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center px-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white border border-slate-200 rounded-3xl p-8 space-y-5">
         <div className="flex flex-col items-center text-center">
-          <img src="/Logo_LeanMode.png" alt="Lean Mode" className="w-20 h-20 rounded-2xl mb-3" />
+          <img src="/Logo_LeanMode.png" alt="Lean Mode" className="w-24 h-24 rounded-3xl mb-3 shadow-lg shadow-emerald-500/10" />
           <h1 className="text-2xl font-bold tracking-tight">Lean Mode</h1>
           <p className="text-xs text-slate-500 mt-1">Masuk untuk lanjutkan progresmu.</p>
+          <div className="flex items-center gap-2.5 mt-4 bg-emerald-50 border border-emerald-200/60 rounded-2xl px-3.5 py-2">
+            <img src="/mascot.webp" alt="Coach AI" className="w-9 h-9 rounded-full object-cover object-top shrink-0" />
+            <p className="text-[11px] text-emerald-700 text-left leading-snug">Halo! Aku Coach AI kamu, siap dampingi perjalanan lean-mu. 💪</p>
+          </div>
         </div>
 
         <div className="space-y-1">

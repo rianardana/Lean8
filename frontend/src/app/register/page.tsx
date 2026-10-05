@@ -10,6 +10,8 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [heightCm, setHeightCm] = useState("");
+  const [weight, setWeight] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -23,6 +25,16 @@ export default function RegisterPage() {
       setLoading(false);
       return;
     }
+    // simpan tinggi & berat (best-effort, kalau gagal bisa diubah di Settings)
+    try {
+      const h = parseFloat(heightCm);
+      const w = parseFloat(weight);
+      await fetch("/api/user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...(h > 0 ? { heightCm: h } : {}), ...(w > 0 ? { currentWeight: w } : {}) }),
+      });
+    } catch { /* ignore */ }
     router.push("/?welcome=1");
     router.refresh();
   };
@@ -31,9 +43,9 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center px-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white border border-slate-200 rounded-3xl p-8 space-y-5">
         <div className="flex flex-col items-center text-center">
-          <img src="/Logo_LeanMode.png" alt="Lean Mode" className="w-20 h-20 rounded-2xl mb-3" />
+          <img src="/mascot.webp" alt="Coach AI Lean Mode" className="h-44 w-auto mb-3" />
           <h1 className="text-2xl font-bold tracking-tight">Buat Akun</h1>
-          <p className="text-xs text-slate-500 mt-1">Mulai perjalanan Lean Mode kamu.</p>
+          <p className="text-xs text-slate-500 mt-1">Mulai perjalanan Lean Mode bareng Coach AI.</p>
         </div>
 
         <div className="space-y-1">
@@ -46,6 +58,30 @@ export default function RegisterPage() {
             required
             className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-emerald-500"
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-slate-500">Tinggi (cm)</label>
+            <input
+              type="number"
+              value={heightCm}
+              onChange={(e) => setHeightCm(e.target.value)}
+              placeholder="175"
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-slate-500">Berat (kg)</label>
+            <input
+              type="number"
+              step="0.5"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              placeholder="70"
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-emerald-500"
+            />
+          </div>
         </div>
 
         <div className="space-y-1">
