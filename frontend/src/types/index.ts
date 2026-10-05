@@ -55,3 +55,12 @@ export interface MealLogData {
   id?: number; date: string; mealType: string; foodName: string; quantity: number;
   calories: number; protein: number; carbs: number; fat: number;
 }
+
+export interface WorkoutLogData {
+  id?: number;
+  date: string;
+  name: string;
+  type: string;
+  minutes: number;
+  kcal: number;
+}

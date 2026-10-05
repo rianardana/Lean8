@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { FoodItemData, MealLogData } from "@/types";
+import { FoodItemData, MealLogData, WorkoutLogData } from "@/types";
 import { Flame, Search, Plus, Trash2, Coffee, Sun, Moon, Cookie, Camera, Sparkles, Image as ImageIcon } from "lucide-react";
 
 const MEALS = [
@@ -40,6 +40,7 @@ export const CalorieTracker: React.FC = () => {
   const [photoLoading, setPhotoLoading] = useState(false);
   const [photoMsg, setPhotoMsg] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogData[]>([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -47,6 +48,14 @@ export const CalorieTracker: React.FC = () => {
       const data = await api.getMeals(date);
       if (isMounted) setMeals(data);
     })();
+    return () => { isMounted = false; };
+  }, [date]);
+
+  useEffect(() => {
+    let isMounted = true;
+    api.getWorkouts(date).then((logs) => {
+      if (isMounted) setWorkoutLogs(logs);
+    }).catch(() => {});
     return () => { isMounted = false; };
   }, [date]);
 
@@ -131,6 +140,13 @@ export const CalorieTracker: React.FC = () => {
     { calories: 0, protein: 0, carbs: 0, fat: 0 }
   );
   const pct = Math.min(100, (totals.calories / target) * 100);
+  const workoutKcal = workoutLogs.reduce((s, l) => s + l.kcal, 0);
+
+  const removeWorkout = async (id: number) => {
+    await api.deleteWorkout(id);
+    const logs = await api.getWorkouts(date);
+    setWorkoutLogs(logs);
+  };
 
   const photoUsed = meals.filter((m) => m.foodName.startsWith("📸")).length;
   const photoLeft = Math.max(0, MAX_PHOTO_PER_DAY - photoUsed);
@@ -145,10 +161,50 @@ export const CalorieTracker: React.FC = () => {
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none" />
       </div>
 
-      {/* Progress kalori */}
+      {/* IN vs OUT */}
+      <div className="grid grid-cols-3 gap-2.5">
+        <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-3 text-center">
+          <p className="text-[10px] font-semibold text-orange-600">Masuk</p>
+          <p className="text-lg font-black text-slate-900">{Math.round(totals.calories)}</p>
+          <p className="text-[9px] text-slate-400 font-mono">kcal</p>
+        </div>
+        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3 text-center">
+          <p className="text-[10px] font-semibold text-emerald-600">Keluar</p>
+          <p className="text-lg font-black text-slate-900">{workoutKcal}</p>
+          <p className="text-[9px] text-slate-400 font-mono">kcal</p>
+        </div>
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-center">
+          <p className="text-[10px] font-semibold text-slate-500">Net</p>
+          <p className="text-lg font-black text-slate-900">{Math.round(totals.calories - workoutKcal)}</p>
+          <p className="text-[9px] text-slate-400 font-mono">kcal</p>
+        </div>
+      </div>
+
+      {/* Detail kalori keluar */}
+      {workoutLogs.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-[11px] font-semibold text-slate-500">Detail Kalori Keluar</p>
+          <div className="space-y-1.5">
+            {workoutLogs.map((l) => (
+              <div key={l.id} className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                <div>
+                  <p className="text-xs font-semibold text-slate-800">{l.name}</p>
+                  <p className="text-[10px] text-slate-400 font-mono">{l.minutes} menit</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-emerald-600 font-mono">-{l.kcal} kcal</span>
+                  <button onClick={() => l.id && removeWorkout(l.id)} className="text-slate-400 hover:text-rose-600 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Progress vs target */}
       <div className="space-y-1.5">
         <div className="flex justify-between text-xs font-semibold">
-          <span className="text-slate-500">{Math.round(totals.calories)} / {target} kcal</span>
+          <span className="text-slate-500">Target: {target} kcal</span>
           <span className="text-orange-600 font-mono">P {Math.round(totals.protein)}g • C {Math.round(totals.carbs)}g • F {Math.round(totals.fat)}g</span>
         </div>
         <div className="w-full h-3 bg-slate-50 rounded-full overflow-hidden p-0.5 border border-slate-200">

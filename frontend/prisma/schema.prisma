@@ -26,6 +26,7 @@ model User {
   dailyLogs          DailyLog[]
   weightLogs         WeightLog[]
   mealLogs           MealLog[]
+  workoutLogs        WorkoutLog[]
   sessions           Session[]
   accounts           Account[]
 }
@@ -118,4 +119,16 @@ model MealLog {
   fat       Float
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
+}
+
+model WorkoutLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  date      String
+  name      String // nama gerakan
+  type      String // gym | calisthenics
+  minutes   Int      @default(0)
+  kcal      Int      @default(0)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

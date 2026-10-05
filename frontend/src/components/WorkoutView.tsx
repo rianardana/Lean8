@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { WORKOUTS, MUSCLE_GROUPS, WorkoutType, Exercise } from "@/data/workouts";
-import { Dumbbell, Play, Pause, RotateCcw, Timer, ChevronRight, ArrowLeft } from "lucide-react";
+import { Dumbbell, Play, Pause, RotateCcw, Timer, ChevronRight, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { api } from "@/lib/api";
 
 type TypeFilter = "all" | WorkoutType;
 
@@ -20,14 +21,24 @@ const fmt = (s: number) => {
 
 const muscleLabel = (key: string) => MUSCLE_GROUPS.find((g) => g.key === key)?.label ?? key;
 
-const WorkoutTimer: React.FC = () => {
+// Aktivitas cardio manual (type harus cocok dengan MET di /api/workouts)
+const ACTIVITIES = [
+  { type: "jalan", label: "Jalan" },
+  { type: "lari", label: "Lari" },
+  { type: "sepeda", label: "Sepeda" },
+  { type: "renang", label: "Renang" },
+] as const;
+
+const WorkoutTimer: React.FC<{ onElapsedChange?: (sec: number) => void }> = ({ onElapsedChange }) => {
   const [dur, setDur] = useState(60);
   const [remaining, setRemaining] = useState(60);
+  const [elapsed, setElapsed] = useState(0);
   const [running, setRunning] = useState(false);
 
   useEffect(() => {
     if (!running) return;
     const id = setInterval(() => {
+      setElapsed((e) => e + 1);
       setRemaining((r) => {
         if (r <= 1) { setRunning(false); return 0; }
         return r - 1;
@@ -35,6 +46,8 @@ const WorkoutTimer: React.FC = () => {
     }, 1000);
     return () => clearInterval(id);
   }, [running]);
+
+  useEffect(() => { onElapsedChange?.(elapsed); }, [elapsed, onElapsedChange]);
 
   const pickDur = (d: number) => { if (!running) { setDur(d); setRemaining(d); } };
   const start = () => { setRemaining((r) => (r === 0 ? dur : r)); setRunning(true); };
@@ -92,6 +105,42 @@ export const WorkoutView: React.FC = () => {
   const [type, setType] = useState<TypeFilter>("all");
   const [muscle, setMuscle] = useState<string>("all");
   const [selected, setSelected] = useState<Exercise | null>(null);
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const [savedKcal, setSavedKcal] = useState<number | null>(null);
+  const [savingWorkout, setSavingWorkout] = useState(false);
+  const [sessionKey, setSessionKey] = useState(0);
+  const [actType, setActType] = useState<string | null>(null);
+  const [actMinutes, setActMinutes] = useState("");
+  const [actSavedKcal, setActSavedKcal] = useState<number | null>(null);
+  const [savingAct, setSavingAct] = useState(false);
+
+  useEffect(() => { setSavedKcal(null); }, [selected?.id]);
+
+  const saveWorkout = async () => {
+    if (!selected || elapsedSec < 10) return;
+    setSavingWorkout(true);
+    try {
+      const minutes = Math.max(1, Math.round(elapsedSec / 60));
+      const log = await api.logWorkout({ name: selected.name, type: selected.type, minutes });
+      setSavedKcal(log.kcal);
+      setSessionKey((k) => k + 1);
+    } catch { /* ignore */ }
+    setSavingWorkout(false);
+  };
+
+  const saveActivity = async () => {
+    const mins = Number(actMinutes);
+    if (!actType || !mins || mins <= 0) return;
+    setSavingAct(true);
+    try {
+      const act = ACTIVITIES.find((a) => a.type === actType);
+      const log = await api.logWorkout({ name: act?.label ?? actType, type: actType, minutes: mins });
+      setActSavedKcal(log.kcal);
+      setActMinutes("");
+      setActType(null);
+    } catch { /* ignore */ }
+    setSavingAct(false);
+  };
 
   const list = WORKOUTS.filter(
     (e) => (type === "all" || e.type === type) && (muscle === "all" || e.muscle === muscle)
@@ -99,6 +148,48 @@ export const WorkoutView: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto animate-fade-in">
+      {/* Tambah aktivitas manual */}
+      <div className="bg-white border border-slate-200 rounded-3xl p-5 space-y-3">
+        <div>
+          <span className="text-xs font-mono text-emerald-600 uppercase tracking-wider">Cardio / Aktivitas</span>
+          <h3 className="text-base font-bold text-slate-900">Tambah Aktivitas Manual</h3>
+          <p className="text-xs text-slate-500 mt-0.5">Jalan, lari, sepeda — isi durasi, langsung dihitung kalorinya.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {ACTIVITIES.map((a) => (
+            <button
+              key={a.type}
+              onClick={() => setActType(a.type)}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-all ${actType === a.type ? "bg-emerald-500 border-emerald-400 text-slate-950" : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"}`}
+            >
+              {a.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <input
+            type="number"
+            min="1"
+            value={actMinutes}
+            onChange={(e) => setActMinutes(e.target.value)}
+            placeholder="Durasi (menit)"
+            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-emerald-500"
+          />
+          <button
+            onClick={saveActivity}
+            disabled={!actType || !actMinutes || savingAct}
+            className="px-5 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-sm hover:opacity-95 disabled:opacity-40 transition"
+          >
+            {savingAct ? "..." : "Simpan"}
+          </button>
+        </div>
+        {actSavedKcal != null && (
+          <div className="flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 text-sm font-semibold animate-fade-in">
+            <CheckCircle2 className="w-4 h-4" /> Tersimpan · ±{actSavedKcal} kcal terbakar 🔥
+          </div>
+        )}
+      </div>
+
       <div className="bg-white backdrop-blur-md border border-slate-200 rounded-3xl p-6 space-y-4">
         <div>
           <span className="text-xs font-mono text-emerald-600 uppercase tracking-wider">Panduan Latihan</span>
@@ -194,7 +285,21 @@ export const WorkoutView: React.FC = () => {
                 {selected.tip && <p className="text-xs text-slate-400 border-t border-slate-100 pt-3">{selected.tip}</p>}
               </div>
 
-              <WorkoutTimer />
+              <WorkoutTimer key={sessionKey} onElapsedChange={setElapsedSec} />
+
+              {savedKcal != null ? (
+                <div className="flex items-center justify-center gap-2 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 text-sm font-semibold animate-fade-in">
+                  <CheckCircle2 className="w-4 h-4" /> Workout tersimpan · ±{savedKcal} kcal terbakar 🔥
+                </div>
+              ) : (
+                <button
+                  onClick={saveWorkout}
+                  disabled={elapsedSec < 10 || savingWorkout}
+                  className="w-full py-3.5 rounded-2xl bg-slate-900 text-white font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-40"
+                >
+                  {savingWorkout ? 'Menyimpan...' : `Simpan Workout · ${fmt(elapsedSec)}`}
+                </button>
+              )}
             </div>
           </div>
         </div>,

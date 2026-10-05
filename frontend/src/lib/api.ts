@@ -1,4 +1,4 @@
-import { DashboardData, DailyLogData, WeightLogData, UserSettingsData, AiReviewData, MealLogData, FoodItemData } from "@/types";
+import { DashboardData, DailyLogData, WeightLogData, UserSettingsData, AiReviewData, MealLogData, FoodItemData, WorkoutLogData } from "@/types";
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, { ...options, headers: { "Content-Type": "application/json", ...options?.headers }, cache: "no-store" });
@@ -83,6 +83,18 @@ export const api = {
 
   async deleteMeal(id: number): Promise<void> {
     await request(`/api/meals?id=${id}`, { method: "DELETE" });
+  },
+
+  async getWorkouts(date: string): Promise<WorkoutLogData[]> {
+    return request<WorkoutLogData[]>(`/api/workouts?date=${date}`);
+  },
+
+  async logWorkout(workout: { name: string; type: string; minutes: number }): Promise<WorkoutLogData> {
+    return request<WorkoutLogData>(`/api/workouts`, { method: "POST", body: JSON.stringify(workout) });
+  },
+
+  async deleteWorkout(id: number): Promise<void> {
+    await request(`/api/workouts?id=${id}`, { method: "DELETE" });
   },
 
   async getAiReview(date: string): Promise<AiReviewData> {
