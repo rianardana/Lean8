@@ -53,13 +53,13 @@ export const DailyCheckView: React.FC<DailyCheckViewProps> = ({ onSaved }) => {
   const isBulk = goal === "bulk";
 
   const habits = [
-    { id: "workout", title: "Workout / Movement", desc: "Latihan beban, kalistenik, atau jalan kaki 20+ menit", icon: Dumbbell, completed: log.workout, color: "text-emerald-600 bg-emerald-500/10 border-emerald-500/30" },
-    { id: "ifCompleted", title: isBulk ? "Kalori Surplus" : "Intermittent Fasting", desc: isBulk ? "Makan di atas maintenance, surplus 300-500 kcal" : "Patuhi jendela fasting 16:8 atau sesuai target", icon: Clock, completed: log.ifCompleted, color: "text-teal-600 bg-teal-500/10 border-teal-500/20" },
-    { id: "proteinCompleted", title: "Protein Target", desc: "Tercapai asupan protein harian untuk memelihara otot", icon: Utensils, completed: log.proteinCompleted, color: "text-cyan-600 bg-cyan-500/10 border-cyan-500/20" },
-    { id: "waterCompleted", title: "Air Putih", desc: "Minum minimal 2.5 - 3 Liter air putih per hari", icon: Droplets, completed: log.waterCompleted, color: "text-blue-600 bg-blue-500/10 border-blue-500/20" },
-    { id: "sleepCompleted", title: "Tidur Cukup", desc: "Tidur 7-8 jam berkualitas & matikan layar tepat waktu", icon: Moon, completed: log.sleepCompleted, color: "text-indigo-600 bg-indigo-500/10 border-indigo-500/20" },
-    { id: "noSnack", title: isBulk ? "Snack Tambahan" : "No Snack / Zero Junk", desc: isBulk ? "Snack sehat / tambahan kalori untuk surplus" : "Bebas snack manis/olahan di luar jadwal makan utama", icon: Ban, completed: log.noSnack, color: "text-rose-600 bg-rose-500/10 border-rose-500/20" },
-  ] as const;
+    { id: "workout", title: "Workout / Movement", desc: "Latihan beban, kalistenik, atau jalan kaki 20+ menit", icon: Dumbbell, completed: log.workout, color: "text-emerald-600 bg-emerald-500/10 border-emerald-500/30", auto: true },
+    { id: "ifCompleted", title: isBulk ? "Kalori Surplus" : "Intermittent Fasting", desc: isBulk ? "Makan di atas maintenance, surplus 300-500 kcal" : "Patuhi jendela fasting 16:8 atau sesuai target", icon: Clock, completed: log.ifCompleted, color: "text-teal-600 bg-teal-500/10 border-teal-500/20", auto: !isBulk },
+    { id: "proteinCompleted", title: "Protein Target", desc: "Tercapai asupan protein harian untuk memelihara otot", icon: Utensils, completed: log.proteinCompleted, color: "text-cyan-600 bg-cyan-500/10 border-cyan-500/20", auto: false },
+    { id: "waterCompleted", title: "Air Putih", desc: "Minum minimal 2.5 - 3 Liter air putih per hari", icon: Droplets, completed: log.waterCompleted, color: "text-blue-600 bg-blue-500/10 border-blue-500/20", auto: false },
+    { id: "sleepCompleted", title: "Tidur Cukup", desc: "Tidur 7-8 jam berkualitas & matikan layar tepat waktu", icon: Moon, completed: log.sleepCompleted, color: "text-indigo-600 bg-indigo-500/10 border-indigo-500/20", auto: false },
+    { id: "noSnack", title: isBulk ? "Snack Tambahan" : "No Snack / Zero Junk", desc: isBulk ? "Snack sehat / tambahan kalori untuk surplus" : "Bebas snack manis/olahan di luar jadwal makan utama", icon: Ban, completed: log.noSnack, color: "text-rose-600 bg-rose-500/10 border-rose-500/20", auto: false },
+  ];
 
   const completedCount = habits.filter((h) => h.completed).length;
 
@@ -99,7 +99,12 @@ export const DailyCheckView: React.FC<DailyCheckViewProps> = ({ onSaved }) => {
                 <div className="flex items-start gap-3">
                   <div className={`p-2.5 rounded-xl border ${habit.color}`}><Icon className="w-5 h-5" /></div>
                   <div className="space-y-1">
-                    <h4 className={`text-sm font-semibold transition-colors ${habit.completed ? "text-slate-900" : "text-slate-500"}`}>{habit.title}</h4>
+                    <div className="flex items-center gap-1.5">
+                      <h4 className={`text-sm font-semibold transition-colors ${habit.completed ? "text-slate-900" : "text-slate-500"}`}>{habit.title}</h4>
+                      {habit.auto && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-400 text-[9px] font-mono leading-none">auto</span>
+                      )}
+                    </div>
                     <p className="text-xs text-slate-500 leading-relaxed">{habit.desc}</p>
                   </div>
                 </div>

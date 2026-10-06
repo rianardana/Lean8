@@ -44,20 +44,28 @@ export const ConsistencyCard: React.FC = () => {
           <p className="text-[10px] text-slate-500 font-mono">hari beruntun</p>
         </div>
       </div>
-      <div className="flex gap-1 overflow-x-auto pb-1">
+      <div className="flex justify-between">
         {weeks.map((week, wi) => (
-          <div key={wi} className="flex flex-col gap-1 shrink-0">
+          <div key={wi} className="flex flex-col gap-1">
             {week.map((d) => (
               <div
                 key={d.date}
                 title={`${d.date} — ${d.count}/6 habit`}
-                className={`w-3.5 h-3.5 rounded-sm ${color(d.count)}`}
+                className={`w-4 h-4 rounded-[4px] ${color(d.count)}`}
               />
             ))}
           </div>
         ))}
       </div>
-      <p className="text-[10px] text-slate-500 font-mono">Kurang</p>
+      <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono pt-1">
+        <span>Kurang</span>
+        <div className="flex items-center gap-1">
+          {["bg-slate-100", "bg-emerald-200", "bg-emerald-400", "bg-emerald-600"].map((c) => (
+            <span key={c} className={`w-3 h-3 rounded-[3px] ${c}`} />
+          ))}
+        </div>
+        <span>Rajin</span>
+      </div>
     </div>
   );
 };

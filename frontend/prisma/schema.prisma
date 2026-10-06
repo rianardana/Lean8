@@ -27,6 +27,7 @@ model User {
   weightLogs         WeightLog[]
   mealLogs           MealLog[]
   workoutLogs        WorkoutLog[]
+  fasts              Fast[]
   sessions           Session[]
   accounts           Account[]
 }
@@ -131,4 +132,13 @@ model WorkoutLog {
   kcal      Int      @default(0)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Fast {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  startedAt DateTime
+  endedAt   DateTime?
+  planHours Int       @default(16)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

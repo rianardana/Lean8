@@ -2,17 +2,17 @@
 
 import React from "react";
 import { DashboardData } from "@/types";
-import { Target, Flame, Calendar, Award, ArrowRight } from "lucide-react";
+import { Target, Flame, Calendar, Award, ArrowRight, Dumbbell } from "lucide-react";
 
 interface DashboardViewProps {
   data: DashboardData;
-  onNavigateToDaily: () => void;
+  onNavigateToWorkout: () => void;
   onNavigateToAi: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   data,
-  onNavigateToDaily,
+  onNavigateToWorkout,
   onNavigateToAi,
 }) => {
   const isBulk = data.goal === "bulk";
@@ -29,8 +29,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <Flame className="w-3.5 h-3.5" />
             <span>Habit Transformation Active</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-            Halo, {data.userHandshakeName}!
+          <h2 className="text-2xl sm:text-3xl font-extrabold">
+            <span className="text-slate-900">Halo, </span>
+            <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">{data.userHandshakeName}</span>
+            <span className="text-slate-900">!</span>
           </h2>
           <p className="text-slate-500 text-sm max-w-xl">
             Konsistensi harian &lt; 60 detik menuju tubuh lean ideal. Setiap centang hari ini memperkuat identitas baru Anda.
@@ -123,19 +125,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Action Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <button
-          onClick={onNavigateToDaily}
+          onClick={onNavigateToWorkout}
           className="group relative overflow-hidden bg-gradient-to-br from-white to-white border border-slate-200 hover:border-emerald-500/40 rounded-3xl p-6 text-left transition-all duration-200 hover:shadow-xl hover:shadow-emerald-500/5"
         >
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-xs font-mono text-emerald-600 uppercase tracking-wider">Input Harian</span>
+              <span className="text-xs font-mono text-emerald-600 uppercase tracking-wider">Latihan</span>
               <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
-                Isi Daily Checklist Hari Ini
+                Mulai Workout
               </h3>
-              <p className="text-xs text-slate-500">Butuh waktu kurang dari 60 detik.</p>
+              <p className="text-xs text-slate-500">Gym, kalisthenics, atau cardio — ada timer &amp; demo.</p>
             </div>
             <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-slate-950 transition-all duration-200">
-              <ArrowRight className="w-5 h-5" />
+              <Dumbbell className="w-5 h-5" />
             </div>
           </div>
         </button>

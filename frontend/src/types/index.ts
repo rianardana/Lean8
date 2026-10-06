@@ -64,3 +64,10 @@ export interface WorkoutLogData {
   minutes: number;
   kcal: number;
 }
+
+export interface FastData {
+  id: number;
+  startedAt: string;
+  endedAt?: string | null;
+  planHours: number;
+}

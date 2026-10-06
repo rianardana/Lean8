@@ -2,13 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Navbar, TabType } from "@/components/Navbar";
+import { Navbar, TabType, SECONDARY_TABS } from "@/components/Navbar";
 import { DashboardView } from "@/components/DashboardView";
 import { DailyCheckView } from "@/components/DailyCheckView";
 import { CalorieTracker } from "@/components/CalorieTracker";
 import { ProgressView } from "@/components/ProgressView";
 import { AiReviewView } from "@/components/AiReviewView";
 import { WorkoutView } from "@/components/WorkoutView";
+import { FastView } from "@/components/FastView";
+import { FastReport } from "@/components/FastReport";
 import { SettingsView } from "@/components/SettingsView";
 import { BmiVisual } from "@/components/BmiVisual";
 import { ConsistencyCard } from "@/components/ConsistencyCard";
@@ -25,6 +27,7 @@ export default function Home() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [showTour, setShowTour] = useState(false);
   const [coachOpen, setCoachOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const refreshDashboard = async () => {
     try {
@@ -89,10 +92,10 @@ export default function Home() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-slate-500">{user?.name ?? "User"}</span>
+            <span className="text-sm font-bold bg-gradient-to-r from-slate-900 via-emerald-600 to-teal-600 bg-clip-text text-transparent">{user?.name ?? "User"}</span>
             <button
               onClick={handleLogout}
-              className="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-500 hover:bg-slate-100 transition"
+              className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 hover:text-slate-900 transition"
             >
               Logout
             </button>
@@ -107,21 +110,23 @@ export default function Home() {
             <BmiVisual weight={dashboardData.currentWeight} heightCm={dashboardData.heightCm} />
             <DashboardView
               data={dashboardData}
-              onNavigateToDaily={() => setActiveTab("daily")}
+              onNavigateToWorkout={() => setActiveTab("workout")}
               onNavigateToAi={() => setCoachOpen(true)}
             />
             <ConsistencyCard />
           </>
         )}
         {activeTab === "daily" && <DailyCheckView onSaved={refreshDashboard} />}
+        {activeTab === "fast" && <FastView />}
         {activeTab === "nutrition" && <CalorieTracker />}
         {activeTab === "progress" && <ProgressView onWeightLogged={refreshDashboard} />}
         {activeTab === "workout" && <WorkoutView />}
+        {activeTab === "fastReport" && <FastReport />}
         {activeTab === "settings" && <SettingsView onSaved={refreshDashboard} />}
       </main>
 
       {/* Bottom Navigation */}
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} onOpenMore={() => setMoreOpen(true)} />
 
       {/* Floating Coach bubble */}
       <button
@@ -139,6 +144,34 @@ export default function Home() {
       {coachOpen && (
         <div className="fixed inset-0 z-[60] bg-slate-50">
           <AiReviewView onClose={() => setCoachOpen(false)} />
+        </div>
+      )}
+
+      {/* More sheet */}
+      {moreOpen && (
+        <div className="fixed inset-0 z-[70] bg-slate-900/40 backdrop-blur-sm" onClick={() => setMoreOpen(false)}>
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 pb-10 max-w-4xl mx-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-900">Menu Lainnya</h3>
+              <button onClick={() => setMoreOpen(false)} className="text-slate-400 text-sm px-2 font-semibold">Tutup</button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {SECONDARY_TABS.map((t) => {
+                const Icon = t.icon;
+                const isActive = activeTab === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => { setActiveTab(t.id); setMoreOpen(false); }}
+                    className={`flex flex-col items-center gap-2 py-5 rounded-2xl border transition-all ${isActive ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-700" : "bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300"}`}
+                  >
+                    <Icon className="w-6 h-6" />
+                    <span className="text-xs font-semibold">{t.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 

@@ -42,6 +42,14 @@ export async function POST(req: NextRequest) {
   const log = await prisma.workoutLog.create({
     data: { userId, date, name: input.name, type: input.type, minutes: input.minutes, kcal },
   })
+
+  // Auto-centang habit "Workout" hari ini, biar gak input dua kali.
+  await prisma.dailyLog.upsert({
+    where: { userId_date: { userId, date } },
+    update: { workout: true },
+    create: { userId, date, workout: true },
+  })
+
   return NextResponse.json(log)
 }
 
@@ -50,6 +58,15 @@ export async function DELETE(req: NextRequest) {
   if (userId == null) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const id = Number(req.nextUrl.searchParams.get('id'))
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
-  await prisma.workoutLog.deleteMany({ where: { id, userId } })
+
+  const log = await prisma.workoutLog.findFirst({ where: { id, userId } })
+  if (!log) return NextResponse.json({ ok: true })
+  await prisma.workoutLog.delete({ where: { id } })
+
+  // Kalau gak ada workout lagi di hari itu, balikin habit "Workout" jadi false.
+  const remaining = await prisma.workoutLog.count({ where: { userId, date: log.date } })
+  if (remaining === 0) {
+    await prisma.dailyLog.updateMany({ where: { userId, date: log.date }, data: { workout: false } })
+  }
   return NextResponse.json({ ok: true })
 }

@@ -1,4 +1,4 @@
-import { DashboardData, DailyLogData, WeightLogData, UserSettingsData, AiReviewData, MealLogData, FoodItemData, WorkoutLogData } from "@/types";
+import { DashboardData, DailyLogData, WeightLogData, UserSettingsData, AiReviewData, MealLogData, FoodItemData, WorkoutLogData, FastData } from "@/types";
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, { ...options, headers: { "Content-Type": "application/json", ...options?.headers }, cache: "no-store" });
@@ -95,6 +95,26 @@ export const api = {
 
   async deleteWorkout(id: number): Promise<void> {
     await request(`/api/workouts?id=${id}`, { method: "DELETE" });
+  },
+
+  async getFast(): Promise<{ active: FastData | null; history: FastData[] }> {
+    return request(`/api/fast`);
+  },
+
+  async startFast(planHours: number): Promise<FastData> {
+    return request<FastData>(`/api/fast`, { method: "POST", body: JSON.stringify({ action: "start", planHours }) });
+  },
+
+  async endFast(): Promise<FastData> {
+    return request<FastData>(`/api/fast`, { method: "POST", body: JSON.stringify({ action: "end" }) });
+  },
+
+  async editFast(id: number, patch: { startedAt?: string; planHours?: number }): Promise<FastData> {
+    return request<FastData>(`/api/fast`, { method: "POST", body: JSON.stringify({ action: "edit", id, ...patch }) });
+  },
+
+  async logFast(payload: { startedAt: string; endedAt: string; planHours?: number }): Promise<FastData> {
+    return request<FastData>(`/api/fast`, { method: "POST", body: JSON.stringify({ action: "log", ...payload }) });
   },
 
   async getAiReview(date: string): Promise<AiReviewData> {

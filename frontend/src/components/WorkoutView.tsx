@@ -3,14 +3,14 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { WORKOUTS, MUSCLE_GROUPS, WorkoutType, Exercise } from "@/data/workouts";
-import { Dumbbell, Play, Pause, RotateCcw, Timer, ChevronRight, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Dumbbell, Play, Pause, RotateCcw, Timer, ChevronRight, ArrowLeft, CheckCircle2, Search } from "lucide-react";
 import { api } from "@/lib/api";
 
 type TypeFilter = "all" | WorkoutType;
 
-const TYPE_LABEL: Record<WorkoutType, { label: string; cls: string }> = {
-  gym: { label: "Gym", cls: "text-amber-600 bg-amber-500/10 border-amber-500/30" },
-  calisthenics: { label: "Calisthenics", cls: "text-emerald-600 bg-emerald-500/10 border-emerald-500/30" },
+const TYPE_LABEL: Record<WorkoutType, { label: string; cls: string; emoji: string }> = {
+  gym: { label: "Gym", cls: "text-amber-600 bg-amber-500/10 border-amber-500/30", emoji: "🏋️" },
+  calisthenics: { label: "Calisthenics", cls: "text-emerald-600 bg-emerald-500/10 border-emerald-500/30", emoji: "🤸" },
 };
 
 const fmt = (s: number) => {
@@ -23,10 +23,10 @@ const muscleLabel = (key: string) => MUSCLE_GROUPS.find((g) => g.key === key)?.l
 
 // Aktivitas cardio manual (type harus cocok dengan MET di /api/workouts)
 const ACTIVITIES = [
-  { type: "jalan", label: "Jalan" },
-  { type: "lari", label: "Lari" },
-  { type: "sepeda", label: "Sepeda" },
-  { type: "renang", label: "Renang" },
+  { type: "jalan", label: "Jalan", emoji: "🚶" },
+  { type: "lari", label: "Lari", emoji: "🏃" },
+  { type: "sepeda", label: "Sepeda", emoji: "🚴" },
+  { type: "renang", label: "Renang", emoji: "🏊" },
 ] as const;
 
 const WorkoutTimer: React.FC<{ onElapsedChange?: (sec: number) => void }> = ({ onElapsedChange }) => {
@@ -104,6 +104,7 @@ const WorkoutTimer: React.FC<{ onElapsedChange?: (sec: number) => void }> = ({ o
 export const WorkoutView: React.FC = () => {
   const [type, setType] = useState<TypeFilter>("all");
   const [muscle, setMuscle] = useState<string>("all");
+  const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Exercise | null>(null);
   const [elapsedSec, setElapsedSec] = useState(0);
   const [savedKcal, setSavedKcal] = useState<number | null>(null);
@@ -142,8 +143,9 @@ export const WorkoutView: React.FC = () => {
     setSavingAct(false);
   };
 
+  const q = query.trim().toLowerCase();
   const list = WORKOUTS.filter(
-    (e) => (type === "all" || e.type === type) && (muscle === "all" || e.muscle === muscle)
+    (e) => (type === "all" || e.type === type) && (muscle === "all" || e.muscle === muscle) && (!q || e.name.toLowerCase().includes(q))
   );
 
   return (
@@ -155,14 +157,15 @@ export const WorkoutView: React.FC = () => {
           <h3 className="text-base font-bold text-slate-900">Tambah Aktivitas Manual</h3>
           <p className="text-xs text-slate-500 mt-0.5">Jalan, lari, sepeda — isi durasi, langsung dihitung kalorinya.</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-4 gap-2">
           {ACTIVITIES.map((a) => (
             <button
               key={a.type}
               onClick={() => setActType(a.type)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-all ${actType === a.type ? "bg-emerald-500 border-emerald-400 text-slate-950" : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"}`}
+              className={`flex flex-col items-center gap-1.5 py-3 rounded-2xl border transition-all ${actType === a.type ? "bg-emerald-500/10 border-emerald-500/40" : "bg-slate-50 border-slate-200 hover:border-slate-300"}`}
             >
-              {a.label}
+              <span className="text-2xl leading-none">{a.emoji}</span>
+              <span className={`text-[10px] font-semibold ${actType === a.type ? "text-emerald-700" : "text-slate-500"}`}>{a.label}</span>
             </button>
           ))}
         </div>
@@ -197,14 +200,24 @@ export const WorkoutView: React.FC = () => {
           <p className="text-xs text-slate-500 mt-1">Pilih gerakan gym atau kalisthenics, klik untuk lihat demo &amp; timer.</p>
         </div>
 
+        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5">
+          <Search className="w-4 h-4 text-slate-400 shrink-0" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Cari gerakan (mis. squat, pull up)..."
+            className="bg-transparent text-xs text-slate-900 focus:outline-none w-full placeholder:text-slate-400"
+          />
+        </div>
+
         <div className="flex gap-2">
-          {([["all", "Semua"], ["gym", "Gym"], ["calisthenics", "Calisthenics"]] as const).map(([key, label]) => (
+          {([["all", "Semua", "✨"], ["gym", "Gym", "🏋️"], ["calisthenics", "Calisthenics", "🤸"]] as const).map(([key, label, emoji]) => (
             <button
               key={key}
               onClick={() => setType(key)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-all ${type === key ? "bg-emerald-500 border-emerald-400 text-slate-950" : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"}`}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all ${type === key ? "bg-emerald-500 border-emerald-400 text-slate-950" : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"}`}
             >
-              {label}
+              <span className="text-sm leading-none">{emoji}</span> {label}
             </button>
           ))}
         </div>
@@ -235,8 +248,8 @@ export const WorkoutView: React.FC = () => {
                 className="text-left bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between gap-3 transition-all hover:border-emerald-400 hover:shadow-md hover:shadow-emerald-500/5"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl border bg-slate-50 border-slate-200">
-                    <Dumbbell className="w-4 h-4 text-emerald-600" />
+                  <div className="w-10 h-10 rounded-xl border bg-slate-50 border-slate-200 flex items-center justify-center">
+                    <span className="text-xl leading-none">{e.emoji}</span>
                   </div>
                   <div>
                     <h4 className="text-sm font-semibold text-slate-900">{e.name}</h4>
@@ -244,7 +257,7 @@ export const WorkoutView: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-[10px] font-semibold px-2 py-1 rounded-full border whitespace-nowrap ${t.cls}`}>{t.label}</span>
+                  <span className={`text-[10px] font-semibold px-2 py-1 rounded-full border whitespace-nowrap ${t.cls}`}>{t.emoji} {t.label}</span>
                   <ChevronRight className="w-4 h-4 text-slate-300" />
                 </div>
               </button>
