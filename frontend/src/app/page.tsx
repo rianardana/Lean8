@@ -14,6 +14,9 @@ import { FastReport } from "@/components/FastReport";
 import { SettingsView } from "@/components/SettingsView";
 import { BmiVisual } from "@/components/BmiVisual";
 import { ConsistencyCard } from "@/components/ConsistencyCard";
+import { EtaInsightCard } from "@/components/EtaInsightCard";
+import { MilestoneToast } from "@/components/MilestoneToast";
+import { WeightNudge } from "@/components/WeightNudge";
 import { DashboardData } from "@/types";
 import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
@@ -108,11 +111,13 @@ export default function Home() {
         {activeTab === "dashboard" && dashboardData && (
           <>
             <BmiVisual weight={dashboardData.currentWeight} heightCm={dashboardData.heightCm} />
+            <WeightNudge onSaved={refreshDashboard} />
             <DashboardView
               data={dashboardData}
               onNavigateToWorkout={() => setActiveTab("workout")}
               onNavigateToAi={() => setCoachOpen(true)}
             />
+            <EtaInsightCard />
             <ConsistencyCard />
           </>
         )}
@@ -176,6 +181,8 @@ export default function Home() {
       )}
 
       <InstallPrompt />
+
+      <MilestoneToast />
 
       {showTour && <OnboardingTour onDone={handleTourDone} />}
     </div>

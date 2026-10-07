@@ -71,3 +71,8 @@ export interface FastData {
   endedAt?: string | null;
   planHours: number;
 }
+
+export interface EtaInsightData {
+  date: string;
+  insight: string;
+}

@@ -1,4 +1,4 @@
-import { DashboardData, DailyLogData, WeightLogData, UserSettingsData, AiReviewData, MealLogData, FoodItemData, WorkoutLogData, FastData } from "@/types";
+import { DashboardData, DailyLogData, WeightLogData, UserSettingsData, AiReviewData, MealLogData, FoodItemData, WorkoutLogData, FastData, EtaInsightData } from "@/types";
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, { ...options, headers: { "Content-Type": "application/json", ...options?.headers }, cache: "no-store" });
@@ -67,6 +67,10 @@ export const api = {
 
   async getAiReviewPersonal(): Promise<{ date: string; review: string }> {
     return request(`/api/ai/review`, { method: "POST", body: JSON.stringify({}) });
+  },
+
+  async getEtaInsight(): Promise<EtaInsightData> {
+    return request<EtaInsightData>(`/api/ai/eta`);
   },
 
   async searchFoods(q: string): Promise<FoodItemData[]> {
