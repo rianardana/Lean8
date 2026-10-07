@@ -88,7 +88,17 @@ export async function POST(req: NextRequest) {
   const active = await prisma.fast.findFirst({ where: { userId, endedAt: null }, orderBy: { startedAt: 'desc' } })
   if (!active) return NextResponse.json({ error: 'No active fast' }, { status: 400 })
   const endedAt = input.endedAt ? new Date(input.endedAt) : new Date()
+  if (isNaN(endedAt.getTime())) return NextResponse.json({ error: 'invalid endedAt' }, { status: 400 })
+  if (endedAt.getTime() <= active.startedAt.getTime()) return NextResponse.json({ error: 'endedAt must be after startedAt' }, { status: 400 })
   const fast = await prisma.fast.update({ where: { id: active.id }, data: { endedAt } })
   await markIfToday(userId)
   return NextResponse.json(fast)
+}
+
+export async function DELETE(req: NextRequest) {
+  const userId = await getSessionUserId()
+  if (userId == null) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const id = Number(req.nextUrl.searchParams.get('id'))
+  await prisma.fast.deleteMany({ where: { id, userId } })
+  return NextResponse.json({ ok: true })
 }

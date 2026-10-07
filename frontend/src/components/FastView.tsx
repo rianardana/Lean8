@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { FastData } from "@/types";
-import { Play, Square, Timer, History, Flame, Pencil, Plus } from "lucide-react";
+import { Play, Square, Timer, History, Flame, Pencil, Plus, X, Trash2 } from "lucide-react";
 
 const PLANS = [14, 16, 18, 20];
 
@@ -144,6 +144,11 @@ export const FastView: React.FC = () => {
   const [logging, setLogging] = useState(false);
   const [logStart, setLogStart] = useState("");
   const [logEnd, setLogEnd] = useState("");
+  const [journeyOpen, setJourneyOpen] = useState(false);
+  const [ending, setEnding] = useState(false);
+  const [endDate, setEndDate] = useState("");
+  const [endHour, setEndHour] = useState(7);
+  const [endMinute, setEndMinute] = useState(0);
 
   const refresh = async () => {
     const data = await api.getFast();
@@ -173,12 +178,27 @@ export const FastView: React.FC = () => {
     } catch { /* ignore */ } finally { setBusy(false); }
   };
 
-  const end = async () => {
+  const openEnd = () => {
+    const d = new Date();
+    setEndDate(`${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`);
+    setEndHour(d.getHours());
+    setEndMinute(d.getMinutes());
+    setEnding(true);
+  };
+
+  const confirmEnd = async () => {
+    if (!endDate) return;
     setBusy(true);
     try {
-      await api.endFast();
+      await api.endFast(new Date(`${endDate}T${pad2(endHour)}:${pad2(endMinute)}`).toISOString());
+      setEnding(false);
       await refresh();
     } catch { /* ignore */ } finally { setBusy(false); }
+  };
+
+  const deleteFast = async (id: number) => {
+    await api.deleteFast(id);
+    await refresh();
   };
 
   const openEdit = () => {
@@ -195,7 +215,7 @@ export const FastView: React.FC = () => {
     if (!active) return;
     setBusy(true);
     try {
-      const startedAt = editDate ? `${editDate}T${pad2(editHour)}:${pad2(editMinute)}` : undefined;
+      const startedAt = editDate ? new Date(`${editDate}T${pad2(editHour)}:${pad2(editMinute)}`).toISOString() : undefined;
       const patch: { startedAt?: string; planHours?: number } = {};
       if (startedAt) patch.startedAt = startedAt;
       const p = parseInt(editPlan, 10);
@@ -209,7 +229,7 @@ export const FastView: React.FC = () => {
     if (!logStart || !logEnd) return;
     setBusy(true);
     try {
-      await api.logFast({ startedAt: logStart, endedAt: logEnd });
+      await api.logFast({ startedAt: new Date(logStart).toISOString(), endedAt: new Date(logEnd).toISOString() });
       setLogStart(""); setLogEnd(""); setLogging(false);
       await refresh();
     } catch { /* ignore */ } finally { setBusy(false); }
@@ -229,6 +249,7 @@ export const FastView: React.FC = () => {
     const done = remaining <= 0;
 
     return (
+      <>
       <div className="space-y-6 max-w-3xl mx-auto animate-fade-in">
         <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-6 shadow-lg">
           <div className="flex items-center justify-between">
@@ -249,6 +270,23 @@ export const FastView: React.FC = () => {
             <span className="text-slate-500">Sudah berjalan</span>
             <span className="font-bold text-slate-900 font-mono">{fmtShort(elapsed)}</span>
           </div>
+
+          {/* Tahap saat ini */}
+          <button
+            onClick={() => setJourneyOpen(true)}
+            className="w-full text-left rounded-2xl bg-emerald-500/5 border border-emerald-500/20 p-4 space-y-2 hover:bg-emerald-500/10 transition"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-3xl leading-none animate-float">{stage.emoji}</span>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-slate-900">{stage.label}</p>
+                <p className="text-[11px] text-slate-500 font-mono">{stage.range} · Jam ke-{Math.min(active.planHours, Math.floor(elapsedHours) + 1)}</p>
+              </div>
+              <span className="text-xs font-semibold text-emerald-600 whitespace-nowrap">Lihat semua →</span>
+            </div>
+            <p className="text-xs text-slate-600 leading-relaxed">{stage.desc}</p>
+            <p className="text-[11px] text-emerald-700 leading-relaxed italic">💬 {stage.motivation}</p>
+          </button>
 
           {editing ? (
             <div className="space-y-3 border-t border-slate-100 pt-4">
@@ -275,59 +313,36 @@ export const FastView: React.FC = () => {
             </button>
           )}
 
-          <button
-            onClick={end}
-            disabled={busy}
-            className="w-full py-4 rounded-2xl bg-slate-900 text-white font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
-          >
-            <Square className="w-4 h-4" /> {busy ? "Menyimpan..." : "Akhiri Puasa"}
-          </button>
+          {ending ? (
+            <div className="space-y-3 border-t border-slate-100 pt-4">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-500">Tanggal</label>
+                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-emerald-500" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-500">Jam Buka Puasa</label>
+                <TimeWheel hours={endHour} minutes={endMinute} onChange={(h, m) => { setEndHour(h); setEndMinute(m); }} />
+              </div>
+              <div className="flex gap-2">
+                <button onClick={confirmEnd} disabled={busy || !endDate} className="flex-1 py-3 rounded-2xl bg-slate-900 text-white font-bold text-sm hover:opacity-90 disabled:opacity-50 transition">Konfirmasi Akhiri</button>
+                <button onClick={() => setEnding(false)} className="px-4 py-3 rounded-2xl bg-slate-100 text-slate-600 font-bold text-sm hover:bg-slate-200 transition">Batal</button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={openEnd}
+              disabled={busy}
+              className="w-full py-4 rounded-2xl bg-slate-900 text-white font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
+            >
+              <Square className="w-4 h-4" /> Akhiri Puasa
+            </button>
+          )}
         </div>
 
-        {/* Perjalanan fase */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4">
-          <div>
-            <span className="text-xs font-mono text-emerald-600 uppercase tracking-wider">Perjalanan Puasa</span>
-            <h3 className="text-xl font-bold text-slate-900">Tahapan Tubuh</h3>
-            <p className="text-xs text-slate-500 mt-1">Apa yang terjadi di dalam tubuhmu seiring jam berjalan.</p>
-          </div>
-          <div className="space-y-3">
-            {STAGES.map((s) => {
-              const reached = elapsedHours >= s.hours;
-              const isCurrent = stage.hours === s.hours;
-              return (
-                <div
-                  key={s.hours}
-                  className={`rounded-2xl border p-4 space-y-2 transition-all ${
-                    isCurrent ? "border-emerald-500/50 bg-white shadow-md shadow-emerald-500/5"
-                    : reached ? "border-slate-200 bg-white"
-                    : "border-slate-200 bg-slate-50"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`text-3xl leading-none ${isCurrent ? "animate-float" : reached ? "" : "grayscale opacity-60"}`}>{s.emoji}</div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className={`text-sm font-bold ${reached ? "text-slate-900" : "text-slate-400"}`}>{s.label}</h4>
-                        {isCurrent && (
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-[10px] font-mono">
-                            Sedang berjalan · Jam ke-{Math.min(active.planHours, Math.floor(elapsedHours) + 1)}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[11px] text-slate-400 font-mono">{s.range}</span>
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-600 leading-relaxed">{s.desc}</p>
-                  <p className="text-[11px] text-emerald-700 leading-relaxed italic">💬 {s.motivation}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <HistoryList history={history} />
+        <HistoryList history={history} onDelete={deleteFast} />
       </div>
+      {journeyOpen && <JourneySheet current={stage} onClose={() => setJourneyOpen(false)} />}
+      </>
     );
   }
 
@@ -394,12 +409,12 @@ export const FastView: React.FC = () => {
         )}
       </div>
 
-      <HistoryList history={history} />
+      <HistoryList history={history} onDelete={deleteFast} />
     </div>
   );
 };
 
-const HistoryList: React.FC<{ history: FastData[] }> = ({ history }) => {
+const HistoryList: React.FC<{ history: FastData[]; onDelete: (id: number) => void }> = ({ history, onDelete }) => {
   if (history.length === 0) return null;
   return (
     <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-3">
@@ -412,16 +427,67 @@ const HistoryList: React.FC<{ history: FastData[] }> = ({ history }) => {
           const start = new Date(f.startedAt);
           const end = f.endedAt ? new Date(f.endedAt) : null;
           const dur = end ? end.getTime() - start.getTime() : 0;
+          const time = (d: Date) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
           return (
             <div key={f.id} className="flex items-center justify-between py-2.5 px-4 rounded-2xl bg-slate-50 border border-slate-200">
               <div>
                 <p className="text-sm font-semibold text-slate-900">{start.toLocaleDateString("id-ID", { day: "numeric", month: "short" })}</p>
-                <p className="text-[11px] text-slate-500 font-mono">{f.planHours}:{24 - f.planHours}</p>
+                <p className="text-[11px] text-slate-500 font-mono">{time(start)} – {end ? time(end) : "sekarang"}</p>
               </div>
-              <span className="text-sm font-bold text-emerald-600 font-mono">{fmtShort(dur)}</span>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-bold text-emerald-600 font-mono">{fmtShort(dur)}</span>
+                <button onClick={() => onDelete(f.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition" aria-label="Hapus">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+};
+
+const JourneySheet: React.FC<{ current: Stage; onClose: () => void }> = ({ current, onClose }) => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40" onClick={onClose}>
+      <div
+        className="w-full max-w-3xl max-h-[85vh] bg-white rounded-t-3xl overflow-hidden flex flex-col animate-slide-up"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-5 border-b border-slate-100 flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">Pembelajaran Intermittent Fasting</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Tahapan yang terjadi di tubuhmu selama berpuasa.</p>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 transition" aria-label="Tutup">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="overflow-y-auto p-5 space-y-3">
+          {STAGES.map((s) => {
+            const isCurrent = current.hours === s.hours;
+            return (
+              <div
+                key={s.hours}
+                className={`rounded-2xl border p-4 space-y-2 ${isCurrent ? "border-emerald-500/50 bg-emerald-500/5" : "border-slate-200 bg-slate-50"}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="text-3xl leading-none">{s.emoji}</div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-bold text-slate-900">{s.label}</h4>
+                    <span className="text-[11px] text-slate-400 font-mono">{s.range}</span>
+                  </div>
+                  {isCurrent && (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-[10px] font-mono">Sekarang</span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">{s.desc}</p>
+                <p className="text-[11px] text-emerald-700 leading-relaxed italic">💬 {s.motivation}</p>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

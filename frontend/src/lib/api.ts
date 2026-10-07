@@ -105,8 +105,12 @@ export const api = {
     return request<FastData>(`/api/fast`, { method: "POST", body: JSON.stringify({ action: "start", planHours }) });
   },
 
-  async endFast(): Promise<FastData> {
-    return request<FastData>(`/api/fast`, { method: "POST", body: JSON.stringify({ action: "end" }) });
+  async endFast(endedAt?: string): Promise<FastData> {
+    return request<FastData>(`/api/fast`, { method: "POST", body: JSON.stringify({ action: "end", ...(endedAt ? { endedAt } : {}) }) });
+  },
+
+  async deleteFast(id: number): Promise<void> {
+    await request(`/api/fast?id=${id}`, { method: "DELETE" });
   },
 
   async editFast(id: number, patch: { startedAt?: string; planHours?: number }): Promise<FastData> {
