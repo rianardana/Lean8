@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { FastData } from "@/types";
-import { Play, Square, Timer, History, Flame, Pencil, Plus, X, Trash2 } from "lucide-react";
+import { Play, Check, History, Flame, Pencil, Plus, X, Trash2 } from "lucide-react";
 
 const PLANS = [14, 16, 18, 20];
 
@@ -101,6 +101,44 @@ const TimeWheel: React.FC<{ hours: number; minutes: number; onChange: (h: number
   );
 };
 
+// Picker durasi horizontal (geser kiri–kanan) — 12–24 jam.
+const DUR_MIN = 12;
+const DUR_MAX = 24;
+const DUR_ITEM = 56; // lebar satu item (w-14)
+
+const DurationWheel: React.FC<{ value: number; onChange: (h: number) => void }> = ({ value, onChange }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const values = Array.from({ length: DUR_MAX - DUR_MIN + 1 }, (_, i) => DUR_MIN + i);
+  useEffect(() => {
+    const v = Math.min(DUR_MAX, Math.max(DUR_MIN, value));
+    ref.current?.scrollTo({ left: (v - DUR_MIN) * DUR_ITEM });
+  }, []);
+  const onScroll = () => {
+    const el = ref.current;
+    if (!el) return;
+    const h = Math.min(DUR_MAX, Math.max(DUR_MIN, Math.round(el.scrollLeft / DUR_ITEM) + DUR_MIN));
+    onChange(h);
+  };
+  return (
+    <div className="relative w-full max-w-xs mx-auto h-16">
+      <div ref={ref} onScroll={onScroll} className="h-full overflow-x-auto snap-x snap-mandatory no-scrollbar flex">
+        <div className="shrink-0" style={{ width: `calc(50% - ${DUR_ITEM / 2}px)` }} />
+        {values.map((v) => (
+          <div
+            key={v}
+            style={{ width: DUR_ITEM }}
+            className={`shrink-0 snap-center h-full flex items-center justify-center text-lg font-bold transition ${v === value ? "text-emerald-700" : "text-slate-400"}`}
+          >
+            {v}
+          </div>
+        ))}
+        <div className="shrink-0" style={{ width: `calc(50% - ${DUR_ITEM / 2}px)` }} />
+      </div>
+      <div className="pointer-events-none absolute inset-y-1 left-1/2 -translate-x-1/2 w-14 border-x-2 border-emerald-500/40 bg-emerald-500/5 rounded-xl" />
+    </div>
+  );
+};
+
 const stageAt = (hours: number) => {
   let current = STAGES[0];
   for (const s of STAGES) if (hours >= s.hours) current = s;
@@ -133,14 +171,14 @@ export const FastView: React.FC = () => {
   const [history, setHistory] = useState<FastData[]>([]);
   const [loading, setLoading] = useState(true);
   const [planHours, setPlanHours] = useState(16);
-  const [customHours, setCustomHours] = useState("");
+  const [customHours, setCustomHours] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [editing, setEditing] = useState(false);
   const [editDate, setEditDate] = useState("");
   const [editHour, setEditHour] = useState(7);
   const [editMinute, setEditMinute] = useState(0);
-  const [editPlan, setEditPlan] = useState("16");
+  const [editPlan, setEditPlan] = useState(16);
   const [logging, setLogging] = useState(false);
   const [logStart, setLogStart] = useState("");
   const [logEnd, setLogEnd] = useState("");
@@ -169,12 +207,12 @@ export const FastView: React.FC = () => {
   }, []);
 
   const start = async () => {
-    const hours = customHours ? parseInt(customHours, 10) : planHours;
+    const hours = customHours ?? planHours;
     if (!hours || hours <= 0) return;
     setBusy(true);
     try {
       setActive(await api.startFast(hours));
-      setCustomHours("");
+      setCustomHours(null);
     } catch { /* ignore */ } finally { setBusy(false); }
   };
 
@@ -207,7 +245,7 @@ export const FastView: React.FC = () => {
     setEditDate(`${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`);
     setEditHour(d.getHours());
     setEditMinute(d.getMinutes());
-    setEditPlan(String(active.planHours));
+    setEditPlan(active.planHours);
     setEditing(true);
   };
 
@@ -218,8 +256,7 @@ export const FastView: React.FC = () => {
       const startedAt = editDate ? new Date(`${editDate}T${pad2(editHour)}:${pad2(editMinute)}`).toISOString() : undefined;
       const patch: { startedAt?: string; planHours?: number } = {};
       if (startedAt) patch.startedAt = startedAt;
-      const p = parseInt(editPlan, 10);
-      if (p && p > 0) patch.planHours = p;
+      if (editPlan && editPlan > 0) patch.planHours = editPlan;
       setActive(await api.editFast(active.id, patch));
       setEditing(false);
     } catch { /* ignore */ } finally { setBusy(false); }
@@ -263,7 +300,7 @@ export const FastView: React.FC = () => {
           <Ring
             pct={pct}
             center={done ? "00:00:00" : fmtHMS(remaining)}
-            sub={done ? "Waktunya makan" : `sisa · target ${active.planHours} jam`}
+            sub={done ? "Waktunya makan" : "sisa waktu"}
           />
 
           <div className="flex items-center justify-between text-sm">
@@ -300,7 +337,7 @@ export const FastView: React.FC = () => {
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-500">Durasi Puasa (jam)</label>
-                <input type="number" min="4" max="72" value={editPlan} onChange={(e) => setEditPlan(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-emerald-500" />
+                <DurationWheel value={editPlan} onChange={setEditPlan} />
               </div>
               <div className="flex gap-2">
                 <button onClick={saveEdit} disabled={busy} className="flex-1 py-3 rounded-2xl bg-emerald-500 text-slate-950 font-bold text-sm hover:opacity-95 disabled:opacity-50 transition">Simpan Perubahan</button>
@@ -334,7 +371,7 @@ export const FastView: React.FC = () => {
               disabled={busy}
               className="w-full py-4 rounded-2xl bg-slate-900 text-white font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
             >
-              <Square className="w-4 h-4" /> Akhiri Puasa
+              <Check className="w-4 h-4" /> Akhiri Puasa
             </button>
           )}
         </div>
@@ -360,8 +397,8 @@ export const FastView: React.FC = () => {
           {PLANS.map((h) => (
             <button
               key={h}
-              onClick={() => { setPlanHours(h); setCustomHours(""); }}
-              className={`py-4 rounded-2xl border text-center transition-all ${planHours === h && !customHours ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-700" : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"}`}
+              onClick={() => { setPlanHours(h); setCustomHours(null); }}
+              className={`py-4 rounded-2xl border text-center transition-all ${planHours === h && customHours === null ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-700" : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"}`}
             >
               <span className="block text-lg font-black">{h}:{24 - h}</span>
               <span className="block text-[10px] font-medium">{h} jam puasa</span>
@@ -369,14 +406,9 @@ export const FastView: React.FC = () => {
           ))}
         </div>
 
-        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-3">
-          <Timer className="w-4 h-4 text-emerald-600 shrink-0" />
-          <input
-            type="number" min="4" max="72" value={customHours}
-            onChange={(e) => setCustomHours(e.target.value)}
-            placeholder="Custom jam (mis. 20)"
-            className="bg-transparent text-xs text-slate-900 focus:outline-none w-full"
-          />
+        <div className="space-y-1">
+          <label className="text-xs font-semibold text-slate-500">Durasi Kustom (jam)</label>
+          <DurationWheel key={customHours === null ? `p-${planHours}` : "c"} value={customHours ?? planHours} onChange={setCustomHours} />
         </div>
 
         <button
