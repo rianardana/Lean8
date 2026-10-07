@@ -279,7 +279,11 @@ export const WorkoutView: React.FC = () => {
 
             <div className="px-4 py-5 pb-28 space-y-4">
               {selected.gif ? (
-                <img src={selected.gif} alt={selected.name} loading="lazy" className="w-full h-56 object-contain rounded-2xl bg-slate-100" />
+                selected.gif.endsWith(".webm") ? (
+                  <video src={selected.gif} autoPlay loop muted playsInline className="w-full h-56 object-contain rounded-2xl bg-black" />
+                ) : (
+                  <img src={selected.gif} alt={selected.name} loading="lazy" className="w-full h-56 object-contain rounded-2xl bg-slate-100" />
+                )
               ) : (
                 <div className="w-full h-56 bg-slate-100 rounded-2xl flex flex-col items-center justify-center gap-1.5 text-slate-300">
                   <Dumbbell className="w-6 h-6" />
