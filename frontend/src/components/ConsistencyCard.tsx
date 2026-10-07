@@ -16,7 +16,7 @@ const color = (count: number) => {
   return "bg-emerald-600";
 };
 
-export const ConsistencyCard: React.FC = () => {
+export const ConsistencyCard: React.FC<{ activeDays?: number }> = ({ activeDays }) => {
   const [data, setData] = useState<StatsData | null>(null);
 
   useEffect(() => {
@@ -41,7 +41,9 @@ export const ConsistencyCard: React.FC = () => {
           <p className="text-3xl font-black text-emerald-600 flex items-center gap-1.5">
             <Flame className="w-5 h-5" /> {data.streak}
           </p>
-          <p className="text-[10px] text-slate-500 font-mono">hari beruntun</p>
+          <p className="text-[10px] text-slate-500 font-mono">
+            hari beruntun{activeDays != null ? ` · hari ke-${activeDays}` : ""}
+          </p>
         </div>
       </div>
       <div className="flex justify-between">

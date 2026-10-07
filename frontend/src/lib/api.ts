@@ -15,7 +15,6 @@ export const api = {
       startingWeight: data.user.initialWeight,
       progressPercentage: data.stats.progressPercent,
       activeDays: data.stats.dayNumber,
-      userHandshakeName: data.user.name,
       heightCm: data.user.heightCm,
       goal: (data.user.goal === "bulk" ? "bulk" : "cut") as "cut" | "bulk",
       etaDays: data.stats.eta?.etaDays ?? null,

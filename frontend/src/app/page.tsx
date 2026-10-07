@@ -111,14 +111,10 @@ export default function Home() {
         {activeTab === "dashboard" && dashboardData && (
           <>
             <BmiVisual weight={dashboardData.currentWeight} heightCm={dashboardData.heightCm} />
-            <WeightNudge onSaved={refreshDashboard} />
-            <DashboardView
-              data={dashboardData}
-              onNavigateToWorkout={() => setActiveTab("workout")}
-              onNavigateToAi={() => setCoachOpen(true)}
-            />
             <EtaInsightCard />
-            <ConsistencyCard />
+            <WeightNudge onSaved={refreshDashboard} />
+            <DashboardView data={dashboardData} />
+            <ConsistencyCard activeDays={dashboardData.activeDays} />
           </>
         )}
         {activeTab === "daily" && <DailyCheckView onSaved={refreshDashboard} />}

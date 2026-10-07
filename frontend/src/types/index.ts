@@ -4,7 +4,6 @@ export interface DashboardData {
   startingWeight: number;
   progressPercentage: number;
   activeDays: number;
-  userHandshakeName: string;
   heightCm: number;
   goal: "cut" | "bulk";
   etaDays?: number | null;
