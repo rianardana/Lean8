@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { wibDate } from "@/lib/time";
 import { TrendingUp } from "lucide-react";
 
 const KEY = "lean8_eta_insight";
@@ -12,7 +13,7 @@ export const EtaInsightCard: React.FC = () => {
 
   useEffect(() => {
     let mounted = true;
-    const today = new Date().toISOString().split("T")[0];
+    const today = wibDate();
     try {
       const cached = localStorage.getItem(KEY);
       if (cached) {

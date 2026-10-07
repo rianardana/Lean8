@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { WeightLogData } from "@/types";
 import { api } from "@/lib/api";
+import { wibDate } from "@/lib/time";
 import { Plus, Calendar, Scale, CheckCircle2 } from "lucide-react";
 
 interface ProgressViewProps {
@@ -12,7 +13,7 @@ interface ProgressViewProps {
 export const ProgressView: React.FC<ProgressViewProps> = ({ onWeightLogged }) => {
   const [weights, setWeights] = useState<WeightLogData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = wibDate();
   const [newWeight, setNewWeight] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
   const [submitting, setSubmitting] = useState<boolean>(false);

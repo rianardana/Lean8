@@ -2,13 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionUserId } from '@/lib/session'
 import { callGemini } from '@/lib/gemini'
+import { wibDate } from '@/lib/time'
 
 const MAX_PHOTO_PER_DAY = 100
-
-function todayKey() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 
 export async function POST(req: NextRequest) {
   const userId = await getSessionUserId()
@@ -17,7 +13,7 @@ export async function POST(req: NextRequest) {
   if (!image) return NextResponse.json({ error: 'image required' }, { status: 400 })
 
   const used = await prisma.mealLog.count({
-    where: { userId, date: todayKey(), foodName: { startsWith: '📸' } },
+    where: { userId, date: wibDate(), foodName: { startsWith: '📸' } },
   })
   if (used >= MAX_PHOTO_PER_DAY) {
     return NextResponse.json(

@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionUserId } from '@/lib/session'
+import { wibDate, wibNow } from '@/lib/time'
 
-function todayKey() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 function diffDays(a: string, b: string) {
   return Math.round((new Date(b + 'T00:00:00').getTime() - new Date(a + 'T00:00:00').getTime()) / 86400000)
 }
@@ -21,7 +18,7 @@ function calcEta(weights: { weight: number }[], target: number): { etaDays: numb
   if (Math.abs(slope) < 1e-9) return null
   const etaDays = Math.round((target - weights[n - 1].weight) / slope)
   if (etaDays <= 0) return null
-  const d = new Date()
+  const d = wibNow()
   d.setDate(d.getDate() + etaDays)
   return { etaDays, etaDate: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
 }
@@ -32,7 +29,7 @@ export async function GET(req: NextRequest) {
 
   const [user, todayLog, weightLogs] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId } }),
-    prisma.dailyLog.findUnique({ where: { userId_date: { userId, date: todayKey() } } }),
+    prisma.dailyLog.findUnique({ where: { userId_date: { userId, date: wibDate() } } }),
     prisma.weightLog.findMany({ where: { userId }, orderBy: { date: 'asc' } }),
   ])
 
@@ -42,7 +39,7 @@ export async function GET(req: NextRequest) {
   const goalDelta = targetWeight - initialWeight // + = naik (bulk), - = turun (cut)
   const achieved = latestWeight - initialWeight
   const progressPercent = goalDelta !== 0 ? Math.min(100, Math.max(0, Math.round((achieved / goalDelta) * 1000) / 10)) : 0
-  const dayNumber = weightLogs.length ? diffDays(weightLogs[0].date, todayKey()) + 1 : 1
+  const dayNumber = weightLogs.length ? diffDays(weightLogs[0].date, wibDate()) + 1 : 1
   const completedCount = todayLog ? [todayLog.workout, todayLog.ifCompleted, todayLog.proteinCompleted, todayLog.waterCompleted, todayLog.sleepCompleted, todayLog.noSnack].filter(Boolean).length : 0
   const eta = calcEta(weightLogs, targetWeight)
 

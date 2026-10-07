@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionUserId } from '@/lib/session'
-
-function todayKey() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
+import { wibDate } from '@/lib/time'
 
 const clampPlan = (n?: number) => Math.min(72, Math.max(4, Math.round(n || 16)))
 
@@ -13,7 +9,7 @@ const clampPlan = (n?: number) => Math.min(72, Math.max(4, Math.round(n || 16)))
 async function markIfToday(userId: number) {
   const user = await prisma.user.findUnique({ where: { id: userId } })
   if (user?.goal !== 'cut') return
-  const date = todayKey()
+  const date = wibDate()
   await prisma.dailyLog.upsert({
     where: { userId_date: { userId, date } },
     update: { ifCompleted: true },
@@ -80,7 +76,7 @@ export async function POST(req: NextRequest) {
       ? clampPlan(input.planHours)
       : clampPlan(Math.round((endedAt.getTime() - startedAt.getTime()) / 3600000))
     const fast = await prisma.fast.create({ data: { userId, startedAt, endedAt, planHours } })
-    if (endedAt.toDateString() === new Date().toDateString()) await markIfToday(userId)
+    if (wibDate(endedAt) === wibDate()) await markIfToday(userId)
     return NextResponse.json(fast)
   }
 

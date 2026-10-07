@@ -1,4 +1,5 @@
 import { DashboardData, DailyLogData, WeightLogData, UserSettingsData, AiReviewData, MealLogData, FoodItemData, WorkoutLogData, FastData, EtaInsightData } from "@/types";
+import { wibDate } from "@/lib/time";
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, { ...options, headers: { "Content-Type": "application/json", ...options?.headers }, cache: "no-store" });
@@ -47,7 +48,7 @@ export const api = {
   },
 
   async logWeight(weight: number, date?: string): Promise<WeightLogData> {
-    const targetDate = date || new Date().toISOString().split("T")[0];
+    const targetDate = date || wibDate();
     return request<WeightLogData>(`/api/weight`, { method: "POST", body: JSON.stringify({ weight, date: targetDate }) });
   },
 

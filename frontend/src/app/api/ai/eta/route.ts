@@ -4,13 +4,10 @@ import { getSessionUserId } from '@/lib/session'
 import { callGemini } from '@/lib/gemini'
 import { stripMarkdown } from '@/lib/text'
 import { countCompleted } from '@/lib/stats'
+import { wibDate } from '@/lib/time'
 
 const BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
 
-function todayISO() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 function addDays(iso: string, days: number) {
   const d = new Date(iso + 'T00:00:00')
   d.setDate(d.getDate() + days)
@@ -42,7 +39,7 @@ export async function GET() {
   const userId = await getSessionUserId()
   if (userId == null) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const today = todayISO()
+  const today = wibDate()
   const [user, weights, logs7, workouts] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId } }),
     prisma.weightLog.findMany({ where: { userId }, orderBy: { date: 'asc' } }),

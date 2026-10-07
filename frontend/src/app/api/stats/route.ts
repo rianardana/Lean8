@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionUserId } from '@/lib/session'
 import { countCompleted } from '@/lib/stats'
+import { wibNow } from '@/lib/time'
 
 const DAYS = 84
 
@@ -17,7 +18,7 @@ export async function GET() {
   const userId = await getSessionUserId()
   if (userId == null) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const from = new Date()
+  const from = wibNow()
   from.setDate(from.getDate() - (DAYS - 1))
 
   const logs = await prisma.dailyLog.findMany({
@@ -32,7 +33,7 @@ export async function GET() {
 
   const days: { date: string; count: number }[] = []
   for (let i = DAYS - 1; i >= 0; i--) {
-    const d = new Date()
+    const d = wibNow()
     d.setDate(d.getDate() - i)
     const k = key(d)
     days.push({ date: k, count: byDate.get(k) ?? 0 })

@@ -3,11 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionUserId } from '@/lib/session'
 import { callGemini } from '@/lib/gemini'
 import { stripMarkdown } from '@/lib/text'
-
-function todayKey() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
+import { wibDate, wibNow } from '@/lib/time'
 
 export async function POST(req: NextRequest) {
   const userId = await getSessionUserId()
@@ -22,8 +18,8 @@ export async function POST(req: NextRequest) {
 
   const [user, todayLog, todayMeals, weights, logs7] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId } }),
-    prisma.dailyLog.findUnique({ where: { userId_date: { userId, date: todayKey() } } }),
-    prisma.mealLog.findMany({ where: { userId, date: todayKey() }, orderBy: { createdAt: 'asc' } }),
+    prisma.dailyLog.findUnique({ where: { userId_date: { userId, date: wibDate() } } }),
+    prisma.mealLog.findMany({ where: { userId, date: wibDate() }, orderBy: { createdAt: 'asc' } }),
     prisma.weightLog.findMany({ where: { userId }, orderBy: { date: 'desc' }, take: 8 }),
     prisma.dailyLog.findMany({ where: { userId }, orderBy: { date: 'desc' }, take: 7 }),
   ])
@@ -35,9 +31,10 @@ export async function POST(req: NextRequest) {
   }
   const workoutDays7 = logs7.filter((l) => l.workout).length
   const isBulk = user?.goal === 'bulk'
-  const hourNow = new Date().getHours()
+  const now = wibNow()
+  const hourNow = now.getHours()
   const partOfDay = hourNow < 11 ? 'pagi' : hourNow < 15 ? 'siang' : hourNow < 19 ? 'sore' : 'malam'
-  const timeNow = `${String(hourNow).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')} (${partOfDay})`
+  const timeNow = `${String(hourNow).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} (${partOfDay})`
   const newUser = logs7.length === 0
   const rekapBlock = newUser
     ? 'User BARU — belum ada history minggu ini.'

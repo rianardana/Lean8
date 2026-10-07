@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { api } from "@/lib/api";
+import { wibDate } from "@/lib/time";
 import { Sparkles, Send, X } from "lucide-react";
 
 interface Message {
@@ -21,7 +22,7 @@ export const AiReviewView: React.FC<{ onClose?: () => void }> = ({ onClose }) =>
 
   // Chip saran kontekstual berdasarkan habit hari ini
   useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = wibDate();
     api.getDaily(today).then((log) => {
       const chips: string[] = [];
       if (!log.workout) chips.push("Ide gerakan tanpa alat");

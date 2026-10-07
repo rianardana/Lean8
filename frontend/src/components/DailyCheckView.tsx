@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { DailyLogData } from "@/types";
 import { api } from "@/lib/api";
+import { wibDate } from "@/lib/time";
 import { Dumbbell, Clock, Utensils, Droplets, Moon, Ban, Save, CheckCircle2, Calendar } from "lucide-react";
 
 interface DailyCheckViewProps {
@@ -10,7 +11,7 @@ interface DailyCheckViewProps {
 }
 
 export const DailyCheckView: React.FC<DailyCheckViewProps> = ({ onSaved }) => {
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = wibDate();
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);

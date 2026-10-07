@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { wibDate } from "@/lib/time";
 import { Scale } from "lucide-react";
 
-const todayStr = () => new Date().toISOString().split("T")[0];
+const todayStr = () => wibDate();
 
 export const WeightNudge: React.FC<{ onSaved?: () => void }> = ({ onSaved }) => {
   const [needsWeight, setNeedsWeight] = useState(false);

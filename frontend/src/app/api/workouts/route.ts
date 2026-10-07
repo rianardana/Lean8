@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionUserId } from '@/lib/session'
+import { wibDate } from '@/lib/time'
 
 // MET (intensitas) per tipe aktivitas
 const MET: Record<string, number> = {
@@ -12,15 +13,10 @@ const MET: Record<string, number> = {
   renang: 7,
 }
 
-function todayKey() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
 export async function GET(req: NextRequest) {
   const userId = await getSessionUserId()
   if (userId == null) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const date = req.nextUrl.searchParams.get('date') || todayKey()
+  const date = req.nextUrl.searchParams.get('date') || wibDate()
   const logs = await prisma.workoutLog.findMany({ where: { userId, date }, orderBy: { createdAt: 'asc' } })
   return NextResponse.json(logs)
 }
@@ -37,7 +33,7 @@ export async function POST(req: NextRequest) {
   const weight = user?.currentWeight ?? 86
   const met = MET[input.type] ?? 5
   const kcal = Math.round(met * weight * (input.minutes / 60))
-  const date = input.date || todayKey()
+  const date = input.date || wibDate()
 
   const log = await prisma.workoutLog.create({
     data: { userId, date, name: input.name, type: input.type, minutes: input.minutes, kcal },

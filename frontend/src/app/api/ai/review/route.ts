@@ -3,17 +3,12 @@ import { prisma } from '@/lib/prisma'
 import { getSessionUserId } from '@/lib/session'
 import { callGemini } from '@/lib/gemini'
 import { stripMarkdown } from '@/lib/text'
-
-function dateKey(offset = 0) {
-  const d = new Date()
-  d.setDate(d.getDate() + offset)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
+import { wibDate, wibNow } from '@/lib/time'
 
 export async function POST(req: NextRequest) {
   const userId = await getSessionUserId()
   if (userId == null) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const today = dateKey(0)
+  const today = wibDate()
 
   // --- KUMPULIN DATA REAL USER ---
   const [user, todayLog, todayMeals, weights, logs7] = await Promise.all([
@@ -32,9 +27,10 @@ export async function POST(req: NextRequest) {
   }
   const workoutDays7 = logs7.filter((l) => l.workout).length
   const isBulk = user?.goal === 'bulk'
-  const hourNow = new Date().getHours()
+  const now = wibNow()
+  const hourNow = now.getHours()
   const partOfDay = hourNow < 11 ? 'pagi' : hourNow < 15 ? 'siang' : hourNow < 19 ? 'sore' : 'malam'
-  const timeNow = `${String(hourNow).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')} (${partOfDay})`
+  const timeNow = `${String(hourNow).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} (${partOfDay})`
   const newUser = logs7.length === 0
   const rekapBlock = newUser
     ? 'User BARU — belum ada history minggu ini. Jangan menilai minggu ini buruk.'

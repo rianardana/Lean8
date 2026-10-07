@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
+import { wibDate } from "@/lib/time";
 import { FoodItemData, MealLogData, WorkoutLogData } from "@/types";
 import { Flame, Search, Plus, Trash2, Coffee, Sun, Moon, Cookie, Camera, Sparkles, Image as ImageIcon } from "lucide-react";
 
@@ -30,7 +31,7 @@ function resizeImage(file: File, maxDim = 1024): Promise<string> {
 }
 
 export const CalorieTracker: React.FC = () => {
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = wibDate();
   const [date, setDate] = useState(todayStr);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<FoodItemData[]>([]);
