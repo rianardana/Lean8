@@ -1,4 +1,4 @@
-import { DashboardData, DailyLogData, WeightLogData, UserSettingsData, AiReviewData, MealLogData, FoodItemData, WorkoutLogData, FastData, EtaInsightData } from "@/types";
+import { DashboardData, DailyLogData, WeightLogData, UserSettingsData, AiReviewData, MealLogData, FoodItemData, WorkoutLogData, FastData, EtaInsightData, ProgramEnrollmentData } from "@/types";
 import { wibDate } from "@/lib/time";
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
@@ -99,6 +99,22 @@ export const api = {
 
   async deleteWorkout(id: number): Promise<void> {
     await request(`/api/workouts?id=${id}`, { method: "DELETE" });
+  },
+
+  async getPrograms(): Promise<ProgramEnrollmentData[]> {
+    return request<ProgramEnrollmentData[]>(`/api/programs`);
+  },
+
+  async startProgram(programId: string, variant: string): Promise<ProgramEnrollmentData> {
+    return request<ProgramEnrollmentData>(`/api/programs`, { method: "POST", body: JSON.stringify({ programId, variant }) });
+  },
+
+  async advanceProgram(programId: string, variant: string): Promise<ProgramEnrollmentData> {
+    return request<ProgramEnrollmentData>(`/api/programs`, { method: "PATCH", body: JSON.stringify({ programId, variant }) });
+  },
+
+  async cancelProgram(programId: string, variant: string): Promise<void> {
+    await request(`/api/programs?programId=${programId}&variant=${variant}`, { method: "DELETE" });
   },
 
   async getFast(): Promise<{ active: FastData | null; history: FastData[] }> {

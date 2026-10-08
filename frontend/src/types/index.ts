@@ -75,3 +75,11 @@ export interface EtaInsightData {
   date: string;
   insight: string;
 }
+
+export interface ProgramEnrollmentData {
+  id: number;
+  programId: string;
+  variant: string;
+  currentDay: number;
+  done: boolean;
+}
