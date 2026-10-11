@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { LayoutDashboard, CheckSquare, Timer, Flame, TrendingDown, Dumbbell, Settings, MoreHorizontal, BarChart3 } from "lucide-react";
+import { LayoutDashboard, CheckSquare, Timer, Flame, TrendingDown, Dumbbell, Settings, MoreHorizontal, BarChart3, ChefHat } from "lucide-react";
 
-export type TabType = "dashboard" | "daily" | "fast" | "nutrition" | "progress" | "workout" | "fastReport" | "settings";
+export type TabType = "dashboard" | "daily" | "fast" | "nutrition" | "progress" | "workout" | "mealprep" | "fastReport" | "settings";
 
 interface NavbarProps {
   activeTab: TabType;
@@ -21,6 +21,7 @@ export const PRIMARY_TABS = [
 export const SECONDARY_TABS = [
   { id: "progress", label: "Progres", icon: TrendingDown },
   { id: "workout", label: "Workout", icon: Dumbbell },
+  { id: "mealprep", label: "Meal Prep", icon: ChefHat },
   { id: "fastReport", label: "Report Puasa", icon: BarChart3 },
   { id: "settings", label: "Setting", icon: Settings },
 ] as const;

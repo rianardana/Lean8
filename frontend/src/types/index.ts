@@ -37,6 +37,7 @@ export interface UserSettingsData {
   workoutTime?: string;
   sleepTime?: string;
   proteinTargetGrams: number;
+  calorieTarget?: number;
   goal?: "cut" | "bulk";
 }
 

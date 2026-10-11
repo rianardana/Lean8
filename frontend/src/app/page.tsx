@@ -9,12 +9,14 @@ import { CalorieTracker } from "@/components/CalorieTracker";
 import { ProgressView } from "@/components/ProgressView";
 import { AiReviewView } from "@/components/AiReviewView";
 import { WorkoutView } from "@/components/WorkoutView";
+import { MealPrepView } from "@/components/MealPrepView";
 import { FastView } from "@/components/FastView";
 import { FastReport } from "@/components/FastReport";
 import { SettingsView } from "@/components/SettingsView";
 import { BmiVisual } from "@/components/BmiVisual";
 import { ConsistencyCard } from "@/components/ConsistencyCard";
 import { EtaInsightCard } from "@/components/EtaInsightCard";
+import { MotivationCard } from "@/components/MotivationCard";
 import { MilestoneToast } from "@/components/MilestoneToast";
 import { WeightNudge } from "@/components/WeightNudge";
 import { DashboardData } from "@/types";
@@ -110,6 +112,7 @@ export default function Home() {
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 pt-5 pb-24 sm:pb-28 space-y-6">
         {activeTab === "dashboard" && dashboardData && (
           <>
+            <MotivationCard />
             <BmiVisual weight={dashboardData.currentWeight} heightCm={dashboardData.heightCm} />
             <EtaInsightCard />
             <WeightNudge onSaved={refreshDashboard} />
@@ -122,6 +125,7 @@ export default function Home() {
         {activeTab === "nutrition" && <CalorieTracker />}
         {activeTab === "progress" && <ProgressView onWeightLogged={refreshDashboard} />}
         {activeTab === "workout" && <WorkoutView />}
+        {activeTab === "mealprep" && <MealPrepView />}
         {activeTab === "fastReport" && <FastReport />}
         {activeTab === "settings" && <SettingsView onSaved={refreshDashboard} />}
       </main>

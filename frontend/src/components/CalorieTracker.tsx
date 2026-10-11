@@ -236,7 +236,13 @@ export const CalorieTracker: React.FC = () => {
             placeholder="Ketik apa aja... (donat cokelat 3, mie goreng jumbo, hamburger)"
             className="bg-transparent text-xs text-slate-900 focus:outline-none w-full"
           />
-          {aiLoading && <Sparkles className="w-4 h-4 text-orange-600 animate-pulse" />}
+          {aiLoading && (
+            <span className="inline-flex gap-1 shrink-0">
+              <span className="w-2 h-2 bg-orange-600 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-2 h-2 bg-orange-600 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-2 h-2 bg-orange-600 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+            </span>
+          )}
         </div>
         {results.length > 0 && (
           <div className="absolute z-20 mt-1 w-full bg-white border border-slate-300 rounded-2xl overflow-hidden shadow-2xl max-h-56 overflow-y-auto">

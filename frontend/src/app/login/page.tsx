@@ -35,9 +35,11 @@ export default function LoginPage() {
           <img src="/Logo_LeanMode.png" alt="Lean Mode" className="w-24 h-24 rounded-3xl mb-3 shadow-lg shadow-emerald-500/10" />
           <h1 className="text-2xl font-bold tracking-tight">Lean Mode</h1>
           <p className="text-xs text-slate-500 mt-1">Masuk untuk lanjutkan progresmu.</p>
-          <div className="flex items-center gap-2.5 mt-4 bg-emerald-50 border border-emerald-200/60 rounded-2xl px-3.5 py-2">
+          <div className="flex items-end gap-2 mt-4 w-full">
             <img src="/mascot.webp" alt="Coach AI" className="w-9 h-9 rounded-full object-cover object-top shrink-0" />
-            <p className="text-[11px] text-emerald-700 text-left leading-snug">Halo! Aku Coach AI kamu, siap dampingi perjalanan lean-mu. 💪</p>
+            <div className="bg-slate-100 border border-slate-200 rounded-2xl rounded-bl-sm px-3.5 py-2.5">
+              <p className="text-[11px] text-slate-600 text-left leading-snug">Halo! Aku Coach AI kamu, siap dampingi perjalanan lean-mu. 💪</p>
+            </div>
           </div>
         </div>
 

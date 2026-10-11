@@ -65,12 +65,24 @@ export const api = {
     return request(`/api/ai/food-estimate`, { method: "POST", body: JSON.stringify({ query }) });
   },
 
+  async getMealVariations(names: string[], goal?: string): Promise<{ days: { name: string; ingredients: string[]; steps: string }[] }> {
+    return request(`/api/ai/meal-variations`, { method: "POST", body: JSON.stringify({ names, goal }) });
+  },
+
+  async resolveFoodMacros(query: string): Promise<{ name: string; protein: number; kcal: number; carbs: number; fat: number }> {
+    return request(`/api/ai/food-macros`, { method: "POST", body: JSON.stringify({ query }) });
+  },
+
   async getAiReviewPersonal(): Promise<{ date: string; review: string }> {
     return request(`/api/ai/review`, { method: "POST", body: JSON.stringify({}) });
   },
 
   async getEtaInsight(): Promise<EtaInsightData> {
     return request<EtaInsightData>(`/api/ai/eta`);
+  },
+
+  async getMotivation(): Promise<{ date: string; message: string }> {
+    return request(`/api/ai/motivation`);
   },
 
   async searchFoods(q: string): Promise<FoodItemData[]> {
