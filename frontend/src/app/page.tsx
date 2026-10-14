@@ -60,6 +60,21 @@ export default function Home() {
     }
   }, []);
 
+  // Konfirmasi sebelum keluar saat di-install sebagai app (standalone)
+  useEffect(() => {
+    if (!window.matchMedia("(display-mode: standalone)").matches) return;
+    history.pushState(null, "", location.href);
+    const onPop = () => {
+      history.pushState(null, "", location.href);
+      if (window.confirm("Keluar dari Lean Mode?")) {
+        window.removeEventListener("popstate", onPop);
+        history.back();
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
   const handleTourDone = () => {
     localStorage.setItem("leanmode_tour_seen", "1");
     setShowTour(false);
