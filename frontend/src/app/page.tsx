@@ -61,28 +61,28 @@ export default function Home() {
     }
   }, []);
 
-  // Konfirmasi sebelum keluar saat di-install sebagai app (standalone)
+  // Double-back-to-exit saat di-install sebagai app (standalone).
+  // PWA tidak bisa menutup diri secara programatik (history.back() no-op),
+  // jadi back pertama tampilkan toast, back kedua biarkan OS menutup app.
   useEffect(() => {
     if (!window.matchMedia("(display-mode: standalone)").matches) return;
     history.pushState(null, "", location.href);
+
+    let exitArmed = false;
     const onPop = () => {
-      // back sudah pop guard entry — tanya dulu, pushState ulang hanya jika batal
+      if (exitArmed) return; // back kedua: guard habis, OS menutup app
+      exitArmed = true;
       Swal.fire({
-        title: "Keluar dari Lean Mode?",
-        text: "Progress kamu tetap tersimpan.",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "Keluar",
-        cancelButtonText: "Batal",
-        confirmButtonColor: "#059669",
-        cancelButtonColor: "#64748b",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          window.removeEventListener("popstate", onPop);
-          history.back();
-        } else {
-          history.pushState(null, "", location.href);
-        }
+        toast: true,
+        position: "top-end",
+        icon: "info",
+        title: "Tekan back sekali lagi untuk keluar",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      }).then(() => {
+        exitArmed = false;
+        history.pushState(null, "", location.href);
       });
     };
     window.addEventListener("popstate", onPop);
