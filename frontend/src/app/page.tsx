@@ -22,6 +22,7 @@ import { WeightNudge } from "@/components/WeightNudge";
 import { DashboardData } from "@/types";
 import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
+import Swal from "sweetalert2";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { OnboardingTour } from "@/components/OnboardingTour";
 
@@ -65,11 +66,24 @@ export default function Home() {
     if (!window.matchMedia("(display-mode: standalone)").matches) return;
     history.pushState(null, "", location.href);
     const onPop = () => {
-      history.pushState(null, "", location.href);
-      if (window.confirm("Keluar dari Lean Mode?")) {
-        window.removeEventListener("popstate", onPop);
-        history.back();
-      }
+      // back sudah pop guard entry — tanya dulu, pushState ulang hanya jika batal
+      Swal.fire({
+        title: "Keluar dari Lean Mode?",
+        text: "Progress kamu tetap tersimpan.",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Keluar",
+        cancelButtonText: "Batal",
+        confirmButtonColor: "#059669",
+        cancelButtonColor: "#64748b",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.removeEventListener("popstate", onPop);
+          history.back();
+        } else {
+          history.pushState(null, "", location.href);
+        }
+      });
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
