@@ -2,20 +2,21 @@
 
 import React, { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { buildMealPrep, PROTEIN_SOURCES, type ProteinSource } from "@/lib/mealprep";
+import { buildMealPrep, PROTEIN_SOURCES, VEGGIE_SOURCES, FAT_SOURCES, type ProteinSource, type SideSource } from "@/lib/mealprep";
 import { ChefHat, Sparkles, Search, X } from "lucide-react";
 
 const fmtG = (g: number) => (g >= 1000 ? `${(g / 1000).toFixed(1)} kg` : `${g} g`);
 const fmtPortion = (g: number, s: ProteinSource) => (s.unit && s.gramsPerUnit ? `${Math.round(g / s.gramsPerUnit)} ${s.unit}` : fmtG(g));
+const fmtShop = (g: number, s: SideSource) => (s.unit && s.gramsPerUnit ? `${Math.round(g / s.gramsPerUnit)} ${s.unit}` : fmtG(g));
 const WEEKDAYS = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
+const DAYS = 7;
+const MEALS = 3;
 
 interface Recipe { name: string; ingredients: string[]; steps: string }
 
 export const MealPrepView: React.FC = () => {
   const [target, setTarget] = useState({ protein: 120, kcal: 2000, goal: "cut" });
   const [selected, setSelected] = useState<ProteinSource[]>([PROTEIN_SOURCES[0]]);
-  const [days, setDays] = useState(7);
-  const [meals, setMeals] = useState(3);
   const [customQuery, setCustomQuery] = useState("");
   const [resolveLoading, setResolveLoading] = useState(false);
   const [recipes, setRecipes] = useState<Recipe[] | null>(null);
@@ -32,7 +33,7 @@ export const MealPrepView: React.FC = () => {
     return () => { mounted = false; };
   }, []);
 
-  const plan = buildMealPrep({ proteinTarget: target.protein, calorieTarget: target.kcal, mealsPerDay: meals, days, sources: selected });
+  const plan = buildMealPrep({ proteinTarget: target.protein, calorieTarget: target.kcal, mealsPerDay: MEALS, days: DAYS, sources: selected });
 
   const toggleSource = (s: ProteinSource) => {
     setSelected((prev) => (prev.some((x) => x.id === s.id) ? (prev.length > 1 ? prev.filter((x) => x.id !== s.id) : prev) : [...prev, s]));
@@ -140,46 +141,23 @@ export const MealPrepView: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex gap-2 flex-wrap items-center">
-          <span className="text-[11px] text-slate-400 font-mono">Hari:</span>
-          {[5, 7].map((d) => (
-            <button
-              key={d}
-              onClick={() => { setDays(d); setRecipes(null); }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
-                days === d ? "bg-emerald-500 text-white border-emerald-400" : "bg-slate-50 text-slate-500 border-slate-200"
-              }`}
-            >
-              {d} hari
-            </button>
-          ))}
-          <span className="text-[11px] text-slate-400 font-mono ml-2">Makan/hari:</span>
-          {[2, 3].map((m) => (
-            <button
-              key={m}
-              onClick={() => setMeals(m)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
-                meals === m ? "bg-emerald-500 text-white border-emerald-400" : "bg-slate-50 text-slate-500 border-slate-200"
-              }`}
-            >
-              {m}x
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Hasil */}
       <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-3">
-        <h4 className="text-xs font-semibold text-slate-500">Hasil — {days} hari · {meals}x makan/hari</h4>
+        <h4 className="text-xs font-semibold text-slate-500">Hasil — {DAYS} hari · {MEALS}x makan/hari</h4>
 
         <div className="space-y-1.5">
           {plan.rotation.map((d, i) => (
-            <div key={i} className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-              <div className="flex items-center gap-2.5">
-                <span className="text-[11px] font-mono text-slate-400 w-10">{WEEKDAYS[i] ?? `H${i + 1}`}</span>
-                <span className="text-xs font-semibold text-slate-800">{d.source.name}</span>
+            <div key={i} className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="text-[11px] font-mono text-slate-400 w-10 shrink-0">{WEEKDAYS[i] ?? `H${i + 1}`}</span>
+                  <span className="text-xs font-semibold text-slate-800 truncate">{d.source.name}</span>
+                </div>
+                <span className="text-xs font-mono text-orange-600 shrink-0">{fmtPortion(d.sourceGramsPerMeal, d.source)}</span>
               </div>
-              <span className="text-xs font-mono text-orange-600">{fmtPortion(d.sourceGramsPerMeal, d.source)}/makan + {d.riceGramsPerMeal}g nasi</span>
+              <p className="text-[11px] text-slate-500 font-mono mt-1 pl-12">{d.riceGramsPerMeal}g nasi · {d.veggie.name} · {fmtShop(d.fatGramsPerMeal, d.fat)}</p>
             </div>
           ))}
         </div>
@@ -189,14 +167,18 @@ export const MealPrepView: React.FC = () => {
         </div>
 
         <div className="bg-slate-900 rounded-2xl p-4 space-y-1.5">
-          <p className="text-[10px] font-mono text-slate-400 uppercase">Masak total</p>
+          <p className="text-[10px] font-mono text-slate-400 uppercase">Daftar Belanja</p>
           {Object.entries(plan.weekly.sourceGrams).map(([id, g]) => {
             const src = selected.find((s) => s.id === id)!;
-            return (
-              <p key={id} className="text-sm font-bold text-white">
-                {fmtPortion(g, src)} {src.name}
-              </p>
-            );
+            return <p key={id} className="text-sm font-bold text-white">{fmtPortion(g, src)} {src.name}</p>;
+          })}
+          {Object.entries(plan.weekly.veggieGrams).map(([id, g]) => {
+            const v = VEGGIE_SOURCES.find((s) => s.id === id)!;
+            return <p key={id} className="text-sm font-bold text-white">{fmtShop(g, v)} {v.name}</p>;
+          })}
+          {Object.entries(plan.weekly.fatGrams).map(([id, g]) => {
+            const f = FAT_SOURCES.find((s) => s.id === id)!;
+            return <p key={id} className="text-sm font-bold text-white">{fmtShop(g, f)} {f.name}</p>;
           })}
           <p className="text-xs text-slate-300">+ {fmtG(plan.weekly.riceGrams)} nasi</p>
         </div>
@@ -213,10 +195,12 @@ export const MealPrepView: React.FC = () => {
           <button
             onClick={handleVary}
             disabled={variLoading}
-            className="w-full flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl text-sm font-bold bg-gradient-to-r from-orange-400 to-amber-400 text-slate-950 shadow-md shadow-orange-500/20 hover:opacity-95 active:scale-95 transition disabled:opacity-50"
+            className="relative w-full rounded-2xl overflow-hidden border-2 border-orange-500/30 hover:border-orange-500 active:scale-95 transition disabled:opacity-50"
           >
-            <Sparkles className={`w-4 h-4 ${variLoading ? "animate-spin" : ""}`} />
-            {variLoading ? "Menyiapkan..." : "Bosan? Buat Resep"}
+            <img src="/cooking.webp" alt="Buat Resep" className="w-full h-36 object-contain" />
+            <span className="block text-center text-xs font-semibold text-slate-700 py-2">
+              {variLoading ? "Menyiapkan..." : "Bosan? Buat Resep"}
+            </span>
           </button>
         ) : (
           <div className="space-y-2">
