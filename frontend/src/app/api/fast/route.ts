@@ -17,6 +17,12 @@ async function markIfToday(userId: number) {
   })
 }
 
+async function unmarkIfToday(userId: number) {
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  if (user?.goal !== 'cut') return
+  await prisma.dailyLog.updateMany({ where: { userId, date: wibDate() }, data: { ifCompleted: false } })
+}
+
 export async function GET() {
   const userId = await getSessionUserId()
   if (userId == null) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -95,6 +101,8 @@ export async function DELETE(req: NextRequest) {
   const userId = await getSessionUserId()
   if (userId == null) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const id = Number(req.nextUrl.searchParams.get('id'))
+  const fast = await prisma.fast.findFirst({ where: { id, userId } })
+  if (fast && fast.endedAt === null) await unmarkIfToday(userId)
   await prisma.fast.deleteMany({ where: { id, userId } })
   return NextResponse.json({ ok: true })
 }

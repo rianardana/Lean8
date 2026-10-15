@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { FastData } from "@/types";
 import { Play, Check, History, Flame, Pencil, Plus, X, Trash2 } from "lucide-react";
+import Swal from "sweetalert2";
 
 const PLANS = [14, 16, 18, 20];
 
@@ -239,6 +240,19 @@ export const FastView: React.FC = () => {
     await refresh();
   };
 
+  const cancelActive = async () => {
+    if (!active) return;
+    const res = await Swal.fire({
+      title: "Batal puasa?",
+      text: "Sesi puasa aktif akan dihapus dan tidak masuk riwayat.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, batalkan",
+      cancelButtonText: "Kembali",
+    });
+    if (res.isConfirmed) await deleteFast(active.id);
+  };
+
   const openEdit = () => {
     if (!active) return;
     const d = new Date(active.startedAt);
@@ -276,7 +290,8 @@ export const FastView: React.FC = () => {
 
   // ===== Sesi aktif =====
   if (active) {
-    const startMs = new Date(active.startedAt).getTime();
+    const start = new Date(active.startedAt);
+    const startMs = start.getTime();
     const targetMs = active.planHours * 3600 * 1000;
     const elapsed = now - startMs;
     const remaining = Math.max(0, targetMs - elapsed);
@@ -303,9 +318,15 @@ export const FastView: React.FC = () => {
             sub={done ? "Waktunya makan" : "sisa waktu"}
           />
 
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-500">Sudah berjalan</span>
-            <span className="font-bold text-slate-900 font-mono">{fmtShort(elapsed)}</span>
+          <div className="space-y-1.5 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500">Mulai Puasa</span>
+              <span className="font-bold text-slate-900 font-mono">{pad2(start.getHours())}:{pad2(start.getMinutes())}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500">Sudah berjalan</span>
+              <span className="font-bold text-slate-900 font-mono">{fmtShort(elapsed)}</span>
+            </div>
           </div>
 
           {/* Tahap saat ini */}
@@ -374,6 +395,14 @@ export const FastView: React.FC = () => {
               <Check className="w-4 h-4" /> Akhiri Puasa
             </button>
           )}
+
+          <button
+            onClick={cancelActive}
+            disabled={busy}
+            className="w-full py-2.5 rounded-2xl text-rose-500 text-sm font-semibold flex items-center justify-center gap-2 hover:bg-rose-50 transition disabled:opacity-50"
+          >
+            <X className="w-4 h-4" /> Batal Puasa
+          </button>
         </div>
 
         <HistoryList history={history} onDelete={deleteFast} />
