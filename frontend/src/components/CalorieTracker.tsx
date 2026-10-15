@@ -4,13 +4,13 @@ import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { wibDate } from "@/lib/time";
 import { FoodItemData, MealLogData, WorkoutLogData } from "@/types";
-import { Flame, Search, Plus, Trash2, Coffee, Sun, Moon, Cookie, Camera, Sparkles, Image as ImageIcon } from "lucide-react";
+import { Flame, Search, Plus, Trash2, Sparkles } from "lucide-react";
 
 const MEALS = [
-  { id: "breakfast", label: "Sarapan", icon: Coffee },
-  { id: "lunch", label: "Siang", icon: Sun },
-  { id: "dinner", label: "Malam", icon: Moon },
-  { id: "snack", label: "Camilan", icon: Cookie },
+  { id: "breakfast", label: "Sarapan" },
+  { id: "lunch", label: "Siang" },
+  { id: "dinner", label: "Malam" },
+  { id: "snack", label: "Camilan" },
 ];
 
 const MAX_PHOTO_PER_DAY = 100;
@@ -215,15 +215,12 @@ export const CalorieTracker: React.FC = () => {
 
       {/* Pilih waktu makan */}
       <div className="flex gap-2 flex-wrap">
-        {MEALS.map((m) => {
-          const Icon = m.icon;
-          return (
-            <button key={m.id} onClick={() => setMealType(m.id)}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition ${mealType === m.id ? "bg-orange-500 text-slate-950 border-orange-400" : "bg-slate-50 text-slate-500 border-slate-200 hover:border-slate-300"}`}>
-              <Icon className="w-3.5 h-3.5" /> {m.label}
-            </button>
-          );
-        })}
+        {MEALS.map((m) => (
+          <button key={m.id} onClick={() => setMealType(m.id)}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium border transition ${mealType === m.id ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"}`}>
+            {m.label}
+          </button>
+        ))}
       </div>
 
       {/* Search makanan — AI POWERED */}
@@ -265,30 +262,27 @@ export const CalorieTracker: React.FC = () => {
       {/* TOMBOL FOTO MAKANAN — Kamera / Gallery */}
       <div className="flex flex-col items-center justify-center gap-3 pt-1">
         <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
-          <label className={`flex items-center justify-center gap-2 px-5 py-4 rounded-2xl text-sm font-bold border transition ${
+          <label className={`relative rounded-2xl overflow-hidden border-2 transition ${
             photoLeft === 0
-              ? "bg-slate-50 border-slate-200 text-slate-500 cursor-not-allowed"
-              : "bg-orange-500/10 border-orange-500/30 text-orange-600 cursor-pointer hover:bg-orange-500/20 active:scale-95"
+              ? "border-slate-200 opacity-60 cursor-not-allowed"
+              : "border-orange-500/30 cursor-pointer hover:border-orange-500 active:scale-95"
           }`}>
-            <Camera className="w-5 h-5" />
-            {photoLoading ? "..." : "Kamera"}
+            <img src="/camera.webp" alt="Camera" className="w-full h-36 object-contain" />
+            <span className="block text-center text-xs font-semibold text-slate-700 py-1.5">Camera</span>
             <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhoto} disabled={photoLoading || photoLeft === 0} />
           </label>
 
-          <label className={`flex items-center justify-center gap-2 px-5 py-4 rounded-2xl text-sm font-bold border transition ${
+          <label className={`relative rounded-2xl overflow-hidden border-2 transition ${
             photoLeft === 0
-              ? "bg-slate-50 border-slate-200 text-slate-500 cursor-not-allowed"
-              : "bg-orange-500/10 border-orange-500/30 text-orange-600 cursor-pointer hover:bg-orange-500/20 active:scale-95"
+              ? "border-slate-200 opacity-60 cursor-not-allowed"
+              : "border-orange-500/30 cursor-pointer hover:border-orange-500 active:scale-95"
           }`}>
-            <ImageIcon className="w-5 h-5" />
-            {photoLoading ? "..." : "Gallery"}
+            <img src="/galery.webp" alt="Gallery" className="w-full h-36 object-contain" />
+            <span className="block text-center text-xs font-semibold text-slate-700 py-1.5">Gallery</span>
             <input type="file" accept="image/*" className="hidden" onChange={handlePhoto} disabled={photoLoading || photoLeft === 0} />
           </label>
         </div>
 
-        <span className="text-[11px] text-slate-500 font-mono">
-          {photoLoading ? "Menganalisis..." : `${photoUsed}/${MAX_PHOTO_PER_DAY} foto hari ini`}
-        </span>
         {photoMsg && <span className="text-[11px] text-rose-600 text-center">{photoMsg}</span>}
       </div>
 

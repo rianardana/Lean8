@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { DailyLogData } from "@/types";
 import { api } from "@/lib/api";
 import { wibDate } from "@/lib/time";
-import { Dumbbell, Clock, Utensils, Droplets, Moon, Ban, Save, CheckCircle2, Calendar } from "lucide-react";
+import { Save, CheckCircle2, Calendar } from "lucide-react";
 
 interface DailyCheckViewProps {
   onSaved?: () => void;
@@ -54,12 +54,12 @@ export const DailyCheckView: React.FC<DailyCheckViewProps> = ({ onSaved }) => {
   const isBulk = goal === "bulk";
 
   const habits = [
-    { id: "workout", title: "Workout / Movement", desc: "Latihan beban, kalistenik, atau jalan kaki 20+ menit", icon: Dumbbell, completed: log.workout, color: "text-emerald-600 bg-emerald-500/10 border-emerald-500/30", auto: true },
-    { id: "ifCompleted", title: isBulk ? "Kalori Surplus" : "Intermittent Fasting", desc: isBulk ? "Makan di atas maintenance, surplus 300-500 kcal" : "Patuhi jendela fasting 16:8 atau sesuai target", icon: Clock, completed: log.ifCompleted, color: "text-teal-600 bg-teal-500/10 border-teal-500/20", auto: !isBulk },
-    { id: "proteinCompleted", title: "Protein Target", desc: "Tercapai asupan protein harian untuk memelihara otot", icon: Utensils, completed: log.proteinCompleted, color: "text-cyan-600 bg-cyan-500/10 border-cyan-500/20", auto: false },
-    { id: "waterCompleted", title: "Air Putih", desc: "Minum minimal 2.5 - 3 Liter air putih per hari", icon: Droplets, completed: log.waterCompleted, color: "text-blue-600 bg-blue-500/10 border-blue-500/20", auto: false },
-    { id: "sleepCompleted", title: "Tidur Cukup", desc: "Tidur 7-8 jam berkualitas & matikan layar tepat waktu", icon: Moon, completed: log.sleepCompleted, color: "text-indigo-600 bg-indigo-500/10 border-indigo-500/20", auto: false },
-    { id: "noSnack", title: isBulk ? "Snack Tambahan" : "No Snack / Zero Junk", desc: isBulk ? "Snack sehat / tambahan kalori untuk surplus" : "Bebas snack manis/olahan di luar jadwal makan utama", icon: Ban, completed: log.noSnack, color: "text-rose-600 bg-rose-500/10 border-rose-500/20", auto: false },
+    { id: "workout", title: "Workout / Movement", desc: "Latihan beban, kalistenik, atau jalan kaki 20+ menit", image: "/workout%20card.webp", completed: log.workout, auto: true },
+    { id: "ifCompleted", title: isBulk ? "Kalori Surplus" : "Intermittent Fasting", desc: isBulk ? "Makan di atas maintenance, surplus 300-500 kcal" : "Patuhi jendela fasting 16:8 atau sesuai target", image: "/intermittent%20card.webp", completed: log.ifCompleted, auto: !isBulk },
+    { id: "proteinCompleted", title: "Protein Target", desc: "Tercapai asupan protein harian untuk memelihara otot", image: "/protein%20card.webp", completed: log.proteinCompleted, auto: false },
+    { id: "waterCompleted", title: "Air Putih", desc: "Minum minimal 2.5 - 3 Liter air putih per hari", image: "/water%20card.webp", completed: log.waterCompleted, auto: false },
+    { id: "sleepCompleted", title: "Tidur Cukup", desc: "Tidur 7-8 jam berkualitas & matikan layar tepat waktu", image: "/sleep%20card.webp", completed: log.sleepCompleted, auto: false },
+    { id: "noSnack", title: isBulk ? "Snack Tambahan" : "No Snack / Zero Junk", desc: isBulk ? "Snack sehat / tambahan kalori untuk surplus" : "Bebas snack manis/olahan di luar jadwal makan utama", image: "/junkfood%20card.webp", completed: log.noSnack, auto: false },
   ];
 
   const completedCount = habits.filter((h) => h.completed).length;
@@ -93,12 +93,11 @@ export const DailyCheckView: React.FC<DailyCheckViewProps> = ({ onSaved }) => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
           {habits.map((habit) => {
-            const Icon = habit.icon;
             return (
               <div key={habit.id} onClick={() => toggleHabit(habit.id as keyof Omit<DailyLogData, "id" | "date" | "notes" | "completedCount">)}
                 className={`group cursor-pointer select-none rounded-2xl border p-4 transition-all duration-200 flex items-start justify-between gap-3 ${habit.completed ? "bg-white border-emerald-500/40 shadow-md shadow-emerald-500/5" : "bg-slate-50 border-slate-200 hover:border-slate-300"}`}>
                 <div className="flex items-start gap-3">
-                  <div className={`p-2.5 rounded-xl border ${habit.color}`}><Icon className="w-5 h-5" /></div>
+                  <img src={habit.image} alt={habit.title} className="w-12 h-12 rounded-xl object-cover shrink-0" />
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5">
                       <h4 className={`text-sm font-semibold transition-colors ${habit.completed ? "text-slate-900" : "text-slate-500"}`}>{habit.title}</h4>
