@@ -10,9 +10,9 @@ import { ProgramEnrollmentData } from "@/types";
 
 type TypeFilter = "all" | WorkoutType;
 
-const TYPE_LABEL: Record<WorkoutType, { label: string; cls: string; emoji: string }> = {
-  gym: { label: "Gym", cls: "text-amber-600 bg-amber-500/10 border-amber-500/30", emoji: "🏋️" },
-  calisthenics: { label: "Calisthenics", cls: "text-emerald-600 bg-emerald-500/10 border-emerald-500/30", emoji: "🤸" },
+const TYPE_LABEL: Record<WorkoutType, { label: string; cls: string }> = {
+  gym: { label: "Gym", cls: "text-amber-600 bg-amber-500/10 border-amber-500/30" },
+  calisthenics: { label: "Calisthenics", cls: "text-emerald-600 bg-emerald-500/10 border-emerald-500/30" },
 };
 
 const fmt = (s: number) => {
@@ -26,10 +26,20 @@ const exById = (id: string) => WORKOUTS.find((w) => w.id === id);
 
 // Aktivitas cardio manual (type harus cocok dengan MET di /api/workouts)
 const ACTIVITIES = [
-  { type: "jalan", label: "Jalan", emoji: "🚶" },
-  { type: "lari", label: "Lari", emoji: "🏃" },
-  { type: "sepeda", label: "Sepeda", emoji: "🚴" },
-  { type: "renang", label: "Renang", emoji: "🏊" },
+  { type: "jalan", label: "Jalan", image: "/walking.webp" },
+  { type: "lari", label: "Lari", image: "/run.webp" },
+  { type: "sepeda", label: "Sepeda", image: "/cycling.webp" },
+  { type: "renang", label: "Renang", image: "/swim.webp" },
+] as const;
+
+const MUSCLE_CARDS = [
+  { key: "dada", label: "Dada", image: "/Dada%20Card.webp" },
+  { key: "punggung", label: "Punggung", image: "/Punggung%20Card.webp" },
+  { key: "bahu", label: "Bahu", image: "/Bahu%20Card.webp" },
+  { key: "lengan", label: "Lengan", image: "/Lengan%20Card.webp" },
+  { key: "kaki", label: "Kaki", image: "/Kaki%20Card.webp" },
+  { key: "core", label: "Core", image: "/Core%20Card.webp" },
+  { key: "fullbody", label: "Full Body", image: "/FullBody%20Card.webp" },
 ] as const;
 
 const WorkoutTimer: React.FC<{ onElapsedChange?: (sec: number) => void }> = ({ onElapsedChange }) => {
@@ -113,6 +123,8 @@ export const WorkoutView: React.FC = () => {
   const [busy, setBusy] = useState(false);
   const [type, setType] = useState<TypeFilter>("all");
   const [muscle, setMuscle] = useState<string>("all");
+  const [muscleIdx, setMuscleIdx] = useState(0);
+  const [mTouchX, setMTouchX] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Exercise | null>(null);
   const [elapsedSec, setElapsedSec] = useState(0);
@@ -272,7 +284,7 @@ export const WorkoutView: React.FC = () => {
               onClick={() => setActType(a.type)}
               className={`flex flex-col items-center gap-1.5 py-3 rounded-2xl border transition-all ${actType === a.type ? "bg-emerald-500/10 border-emerald-500/40" : "bg-slate-50 border-slate-200 hover:border-slate-300"}`}
             >
-              <span className="text-2xl leading-none">{a.emoji}</span>
+              <span className="text-2xl leading-none"><img src={a.image} alt="" className="w-8 h-8 rounded-lg object-cover" /></span>
               <span className={`text-[10px] font-semibold ${actType === a.type ? "text-emerald-700" : "text-slate-500"}`}>{a.label}</span>
             </button>
           ))}
@@ -319,27 +331,63 @@ export const WorkoutView: React.FC = () => {
         </div>
 
         <div className="flex gap-2">
-          {([["all", "Semua", "✨"], ["gym", "Gym", "🏋️"], ["calisthenics", "Calisthenics", "🤸"]] as const).map(([key, label, emoji]) => (
+          {([["all", "Semua"], ["gym", "Gym"], ["calisthenics", "Calisthenics"]] as const).map(([key, label]) => (
             <button
               key={key}
               onClick={() => setType(key)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all ${type === key ? "bg-emerald-500 border-emerald-400 text-slate-950" : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"}`}
+              className={`flex-1 px-4 py-2 rounded-xl text-xs font-semibold border transition-all ${type === key ? "bg-emerald-500 border-emerald-400 text-slate-950" : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"}`}
             >
-              <span className="text-sm leading-none">{emoji}</span> {label}
+              {label}
             </button>
           ))}
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {MUSCLE_GROUPS.map((g) => (
-            <button
-              key={g.key}
-              onClick={() => setMuscle(muscle === g.key ? "all" : g.key)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${muscle === g.key ? "bg-teal-500 border-teal-400 text-slate-950" : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"}`}
+        <div className="space-y-2 pt-1">
+          <span className="text-xs font-semibold text-slate-500">Fokus Otot</span>
+          <div className="relative">
+            <div
+              className="overflow-hidden rounded-2xl"
+              onTouchStart={(e) => setMTouchX(e.touches[0].clientX)}
+              onTouchEnd={(e) => {
+                if (mTouchX == null) return;
+                const dx = e.changedTouches[0].clientX - mTouchX;
+                if (Math.abs(dx) > 40) setMuscleIdx((i) => Math.min(MUSCLE_CARDS.length - 1, Math.max(0, i + (dx < 0 ? 1 : -1))));
+                setMTouchX(null);
+              }}
             >
-              {g.label}
-            </button>
-          ))}
+              <div className="flex transition-transform duration-300 ease-out" style={{ transform: `translateX(-${muscleIdx * 100}%)` }}>
+                {MUSCLE_CARDS.map((m) => (
+                  <button key={m.key} onClick={() => setMuscle(muscle === m.key ? "all" : m.key)} className="w-full shrink-0 flex justify-center text-left">
+                    <div className={`relative w-44 h-56 rounded-2xl overflow-hidden border-2 transition-all ${muscle === m.key ? "border-emerald-400" : "border-slate-200"}`}>
+                      <img src={m.image} alt={m.label} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-3 flex items-center justify-between">
+                        <span className="text-sm font-bold text-white">{m.label}</span>
+                        {muscle === m.key && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {muscleIdx > 0 && (
+              <button onClick={() => setMuscleIdx(muscleIdx - 1)} className="absolute left-1 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 border border-slate-200 shadow flex items-center justify-center text-slate-700 hover:bg-white transition" aria-label="Sebelumnya">
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+            )}
+            {muscleIdx < MUSCLE_CARDS.length - 1 && (
+              <button onClick={() => setMuscleIdx(muscleIdx + 1)} className="absolute right-1 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 border border-slate-200 shadow flex items-center justify-center text-slate-700 hover:bg-white transition" aria-label="Berikutnya">
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex justify-center gap-1.5">
+            {MUSCLE_CARDS.map((m, i) => (
+              <button key={m.key} onClick={() => setMuscleIdx(i)} aria-label={m.label} className={`h-2 rounded-full transition-all ${i === muscleIdx ? "w-6 bg-teal-500" : "w-2 bg-slate-200 hover:bg-slate-300"}`} />
+            ))}
+          </div>
         </div>
       </div>
 
@@ -356,8 +404,8 @@ export const WorkoutView: React.FC = () => {
                 className="text-left bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between gap-3 transition-all hover:border-emerald-400 hover:shadow-md hover:shadow-emerald-500/5"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl border bg-slate-50 border-slate-200 flex items-center justify-center">
-                    <span className="text-xl leading-none">{e.emoji}</span>
+                  <div className="w-10 h-10 rounded-xl border bg-slate-50 border-slate-200 flex items-center justify-center overflow-hidden">
+                    {e.image ? <img src={e.image} alt="" className="w-full h-full object-cover" /> : <span className="text-xl leading-none">{e.emoji}</span>}
                   </div>
                   <div>
                     <h4 className="text-sm font-semibold text-slate-900">{e.name}</h4>
@@ -365,7 +413,7 @@ export const WorkoutView: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-[10px] font-semibold px-2 py-1 rounded-full border whitespace-nowrap ${t.cls}`}>{t.emoji} {t.label}</span>
+                  <span className={`text-[10px] font-semibold px-2 py-1 rounded-full border whitespace-nowrap ${t.cls}`}>{t.label}</span>
                   <ChevronRight className="w-4 h-4 text-slate-300" />
                 </div>
               </button>
@@ -467,7 +515,7 @@ export const WorkoutView: React.FC = () => {
                 <div className="flex gap-2">
                   {selectedProgram.variants.map((v) => (
                     <button key={v.type} onClick={() => setProgVariant(v.type)} className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-all ${progVariant === v.type ? "bg-emerald-500 border-emerald-400 text-slate-950" : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"}`}>
-                      {v.type === "gym" ? "🏋️ Gym" : "🤸 Calisthenics"}
+                      {v.type === "gym" ? "Gym" : "Calisthenics"}
                     </button>
                   ))}
                 </div>
@@ -475,12 +523,12 @@ export const WorkoutView: React.FC = () => {
                 {/* Progress & aksi */}
                 {!enrollment ? (
                   <button onClick={() => startProg(selectedProgram.id, variant.type)} disabled={busy} className="w-full py-3.5 rounded-2xl bg-emerald-500 text-slate-950 font-bold text-sm hover:opacity-95 disabled:opacity-40 transition">
-                    {busy ? "..." : "🚀 Mulai Program"}
+                    {busy ? "..." : "Mulai Program"}
                   </button>
                 ) : (
                   <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
                     {enrollment.done ? (
-                      <p className="text-center text-sm font-bold text-slate-900">🎉 Program Selesai!</p>
+                      <p className="text-center text-sm font-bold text-slate-900">Program Selesai!</p>
                     ) : (
                       <>
                         <div className="flex items-center justify-between text-xs">
@@ -523,7 +571,7 @@ export const WorkoutView: React.FC = () => {
                               if (!ex) return null;
                               return (
                                 <button key={id} onClick={() => setSelected(ex)} className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-emerald-400 transition text-left">
-                                  <span className="text-xl leading-none">{ex.emoji}</span>
+                                  {ex.image ? <img src={ex.image} alt="" className="w-8 h-8 rounded-lg object-cover" /> : <span className="text-xl leading-none">{ex.emoji}</span>}
                                   <span className="text-sm font-medium text-slate-900">{ex.name}</span>
                                   <span className="ml-auto text-[11px] font-mono text-slate-400">{ex.setsReps}</span>
                                 </button>
