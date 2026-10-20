@@ -29,6 +29,36 @@ export interface WeightLogData {
   weight: number;
 }
 
+export interface ProgressPhotoData {
+  id?: number;
+  date: string;
+  url: string;
+  createdAt?: string;
+}
+
+export interface BodyMeasurementData {
+  id?: number;
+  date: string;
+  waist?: number | null;
+  chest?: number | null;
+  arm?: number | null;
+  thigh?: number | null;
+}
+
+export interface WeeklyRecapData {
+  rangeStart: string;
+  rangeEnd: string;
+  recap: string;
+  stats: {
+    consistency: number;
+    activeDays: number;
+    workoutCount: number;
+    workoutMinutes: number;
+    fastCount: number;
+    avgFastHours: number;
+  };
+}
+
 export interface UserSettingsData {
   name: string;
   heightCm: number;

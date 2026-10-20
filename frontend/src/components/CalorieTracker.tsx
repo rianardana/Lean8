@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { wibDate } from "@/lib/time";
+import { resizeImage } from "@/lib/image";
 import { FoodItemData, MealLogData, WorkoutLogData } from "@/types";
 import { Flame, Search, Plus, Trash2, Sparkles } from "lucide-react";
 
@@ -14,21 +15,6 @@ const MEALS = [
 ];
 
 const MAX_PHOTO_PER_DAY = 100;
-
-function resizeImage(file: File, maxDim = 1024): Promise<string> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL("image/jpeg", 0.8));
-    };
-    img.src = URL.createObjectURL(file);
-  });
-}
 
 export const CalorieTracker: React.FC = () => {
   const todayStr = wibDate();
@@ -121,7 +107,7 @@ export const CalorieTracker: React.FC = () => {
     if (!file) return;
     setPhotoLoading(true); setPhotoMsg("");
     try {
-      const base64 = await resizeImage(file);
+      const base64 = await resizeImage(file, 1024, "image/jpeg", 0.8);
       const r = await api.analyzeFoodPhoto(base64);
       await api.logMeal({
         date, mealType, foodName: `📸 ${r.name}`, quantity: 1,

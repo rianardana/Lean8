@@ -1,4 +1,4 @@
-import { DashboardData, DailyLogData, WeightLogData, UserSettingsData, AiReviewData, MealLogData, FoodItemData, WorkoutLogData, FastData, EtaInsightData, ProgramEnrollmentData } from "@/types";
+import { DashboardData, DailyLogData, WeightLogData, UserSettingsData, AiReviewData, MealLogData, FoodItemData, WorkoutLogData, FastData, EtaInsightData, ProgramEnrollmentData, ProgressPhotoData, BodyMeasurementData, WeeklyRecapData } from "@/types";
 import { wibDate } from "@/lib/time";
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
@@ -37,6 +37,30 @@ export const api = {
 
   async getWeights(): Promise<WeightLogData[]> {
     return request<WeightLogData[]>(`/api/weight`);
+  },
+
+  async getProgressPhotos(): Promise<ProgressPhotoData[]> {
+    return request<ProgressPhotoData[]>(`/api/progress-photos`);
+  },
+
+  async addProgressPhoto(image: string, date?: string): Promise<ProgressPhotoData> {
+    return request<ProgressPhotoData>(`/api/progress-photos`, { method: "POST", body: JSON.stringify({ image, date }) });
+  },
+
+  async deleteProgressPhoto(id: number): Promise<void> {
+    await request(`/api/progress-photos?id=${id}`, { method: "DELETE" });
+  },
+
+  async getMeasurements(): Promise<BodyMeasurementData[]> {
+    return request<BodyMeasurementData[]>(`/api/measurements`);
+  },
+
+  async logMeasurement(m: BodyMeasurementData): Promise<BodyMeasurementData> {
+    return request<BodyMeasurementData>(`/api/measurements`, { method: "POST", body: JSON.stringify(m) });
+  },
+
+  async getWeeklyRecap(): Promise<WeeklyRecapData> {
+    return request<WeeklyRecapData>(`/api/ai/weekly`);
   },
 
   async getStats(): Promise<{ streak: number; days: { date: string; count: number }[] }> {

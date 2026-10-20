@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar, TabType, SECONDARY_TABS } from "@/components/Navbar";
 import { DashboardView } from "@/components/DashboardView";
@@ -15,6 +15,8 @@ import { FastReport } from "@/components/FastReport";
 import { SettingsView } from "@/components/SettingsView";
 import { BmiVisual } from "@/components/BmiVisual";
 import { ConsistencyCard } from "@/components/ConsistencyCard";
+import { WeeklyRecap } from "@/components/WeeklyRecap";
+import { AchievementsView } from "@/components/AchievementsView";
 import { EtaInsightCard } from "@/components/EtaInsightCard";
 import { MotivationCard } from "@/components/MotivationCard";
 import { MilestoneToast } from "@/components/MilestoneToast";
@@ -34,6 +36,39 @@ export default function Home() {
   const [showTour, setShowTour] = useState(false);
   const [coachOpen, setCoachOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+
+  // Bubble coach bisa digeser (touch/mouse). Posisi null = default (kanan-bawah).
+  const [coachPos, setCoachPos] = useState<{ x: number; y: number } | null>(null);
+  const coachDrag = useRef<{ sx: number; sy: number; ox: number; oy: number; moved: boolean } | null>(null);
+  const coachDragged = useRef(false);
+
+  const openCoach = () => {
+    if (coachDragged.current) { coachDragged.current = false; return; }
+    setCoachOpen(true);
+  };
+
+  const onCoachDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    coachDrag.current = { sx: e.clientX, sy: e.clientY, ox: r.left, oy: r.top, moved: false };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const onCoachMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const d = coachDrag.current;
+    if (!d) return;
+    const dx = e.clientX - d.sx, dy = e.clientY - d.sy;
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) d.moved = true;
+    if (!d.moved) return;
+    const size = 56;
+    const x = Math.min(Math.max(0, d.ox + dx), window.innerWidth - size);
+    const y = Math.min(Math.max(0, d.oy + dy), window.innerHeight - size);
+    setCoachPos({ x, y });
+  };
+
+  const onCoachUp = () => {
+    coachDragged.current = !!coachDrag.current?.moved;
+    coachDrag.current = null;
+  };
 
   const refreshDashboard = async () => {
     try {
@@ -147,6 +182,7 @@ export default function Home() {
             <WeightNudge onSaved={refreshDashboard} />
             <DashboardView data={dashboardData} />
             <ConsistencyCard activeDays={dashboardData.activeDays} />
+            <WeeklyRecap />
           </>
         )}
         {activeTab === "daily" && <DailyCheckView onSaved={refreshDashboard} />}
@@ -156,19 +192,24 @@ export default function Home() {
         {activeTab === "workout" && <WorkoutView />}
         {activeTab === "mealprep" && <MealPrepView />}
         {activeTab === "fastReport" && <FastReport />}
+        {activeTab === "prestasi" && <AchievementsView />}
         {activeTab === "settings" && <SettingsView onSaved={refreshDashboard} />}
       </main>
 
       {/* Bottom Navigation */}
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} onOpenMore={() => setMoreOpen(true)} />
 
-      {/* Floating Coach bubble */}
+      {/* Floating Coach bubble (bisa digeser) */}
       <button
-        onClick={() => setCoachOpen(true)}
+        onClick={openCoach}
+        onPointerDown={onCoachDown}
+        onPointerMove={onCoachMove}
+        onPointerUp={onCoachUp}
         aria-label="Buka Coach AI"
-        className="fixed bottom-24 right-4 z-40 group"
+        className="fixed z-40 touch-none select-none"
+        style={coachPos ? { left: coachPos.x, top: coachPos.y } : { right: 16, bottom: 96 }}
       >
-        <div className="relative w-14 h-14 rounded-full bg-white border-2 border-emerald-200 shadow-xl shadow-emerald-500/20 flex items-center justify-center overflow-hidden transition-transform group-hover:scale-105 group-active:scale-95">
+        <div className="relative w-14 h-14 rounded-full bg-white border-2 border-emerald-200 shadow-xl shadow-emerald-500/20 flex items-center justify-center overflow-hidden">
           <img src="/mascot.webp" alt="Coach AI" className="w-12 h-12 rounded-full object-cover object-top" />
           <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
         </div>

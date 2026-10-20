@@ -31,6 +31,8 @@ model User {
   sessions           Session[]
   accounts           Account[]
   programEnrollments ProgramEnrollment[]
+  progressPhotos     ProgressPhoto[]
+  bodyMeasurements   BodyMeasurement[]
 }
 
 model Session {
@@ -156,4 +158,27 @@ model ProgramEnrollment {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, programId, variant])
+}
+
+model ProgressPhoto {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  date      String
+  url       String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BodyMeasurement {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  date      String
+  waist     Float?
+  chest     Float?
+  arm       Float?
+  thigh     Float?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
 }
