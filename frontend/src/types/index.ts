@@ -64,6 +64,9 @@ export interface UserSettingsData {
   heightCm: number;
   currentWeight: number;
   targetWeight: number;
+  sex?: string;
+  birthdate?: string | null;
+  activityLevel?: string;
   workoutTime?: string;
   sleepTime?: string;
   proteinTargetGrams: number;

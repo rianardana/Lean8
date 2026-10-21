@@ -18,6 +18,9 @@ model User {
   heightCm           Float      @default(175)
   currentWeight      Float      @default(86)
   targetWeight       Float      @default(65)
+  sex                String     @default("male") // male | female
+  birthdate          String? // YYYY-MM-DD
+  activityLevel      String     @default("moderate") // sedentary | light | moderate | active | very
   workoutTime        String?    @default("07:00")
   sleepTime          String?    @default("22:00")
   proteinTargetGrams Int        @default(120)

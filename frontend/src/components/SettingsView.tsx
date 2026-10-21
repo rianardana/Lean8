@@ -4,7 +4,8 @@ import React, { useState, useEffect } from "react";
 import { UserSettingsData } from "@/types";
 import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
-import { Save, CheckCircle2, User, Target, Dumbbell, Moon, Utensils, Ruler, Scale, TrendingDown, TrendingUp } from "lucide-react";
+import { calcCaloriePlan, ageFromBirthdate, ActivityLevel, Goal } from "@/lib/tdde";
+import { Save, CheckCircle2, User, Target, Dumbbell, Moon, Utensils, Ruler, Scale, TrendingDown, TrendingUp, Calendar, Activity } from "lucide-react";
 
 interface SettingsViewProps {
   onSaved?: () => void;
@@ -21,6 +22,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaved }) => {
 
   const [settings, setSettings] = useState<UserSettingsData>({
     name: "Lean Mode User", heightCm: 175, currentWeight: 86, targetWeight: 65,
+    sex: "male", birthdate: "", activityLevel: "moderate",
     workoutTime: "07:00", sleepTime: "22:00", proteinTargetGrams: 120, goal: "cut",
   });
 
@@ -37,12 +39,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaved }) => {
     e.preventDefault();
     setSaving(true);
     try {
-      const updated = await api.saveSettings(settings);
+      const payload: UserSettingsData = { ...settings, birthdate: settings.birthdate || null };
+      if (plan.target > 0) payload.calorieTarget = plan.target;
+      const updated = await api.saveSettings(payload);
       setSettings(updated); setSuccessMsg(true);
       if (onSaved) onSaved();
       setTimeout(() => setSuccessMsg(false), 3000);
     } finally { setSaving(false); }
   };
+
+  const plan = calcCaloriePlan({
+    sex: (settings.sex as "male" | "female") ?? "male",
+    weightKg: settings.currentWeight,
+    heightCm: settings.heightCm,
+    age: ageFromBirthdate(settings.birthdate),
+    activity: (settings.activityLevel as ActivityLevel) ?? "moderate",
+    goal: (settings.goal ?? "cut") as Goal,
+  });
 
   if (loading) return <div className="text-center py-12 text-slate-500 text-sm animate-pulse">Memuat pengaturan...</div>;
 
@@ -74,6 +87,65 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaved }) => {
                 <span className="text-[10px]">Naik berat / otot</span>
               </button>
             </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-500">Data Tubuh (buat hitung kalori)</label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-400">Jenis Kelamin</label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setSettings({ ...settings, sex: "male" })}
+                    className={`px-3 py-2 rounded-xl border text-xs font-semibold transition ${settings.sex === "male" ? "bg-slate-900 text-white border-slate-900" : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"}`}
+                  >Laki-laki</button>
+                  <button
+                    type="button"
+                    onClick={() => setSettings({ ...settings, sex: "female" })}
+                    className={`px-3 py-2 rounded-xl border text-xs font-semibold transition ${settings.sex === "female" ? "bg-slate-900 text-white border-slate-900" : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"}`}
+                  >Perempuan</button>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-400">Tanggal Lahir</label>
+                <div className="flex items-center gap-2 bg-slate-50 px-3.5 py-2.5 rounded-2xl border border-slate-200 focus-within:border-emerald-500 transition-colors">
+                  <Calendar className="w-4 h-4 text-emerald-600" />
+                  <input type="date" value={settings.birthdate ?? ""} onChange={(e) => setSettings({ ...settings, birthdate: e.target.value })} className="bg-transparent text-xs text-slate-900 focus:outline-none w-full cursor-pointer" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-400">Tingkat Aktivitas</label>
+                <div className="flex items-center gap-2 bg-slate-50 px-3.5 py-2.5 rounded-2xl border border-slate-200 focus-within:border-emerald-500 transition-colors">
+                  <Activity className="w-4 h-4 text-emerald-600" />
+                  <select value={settings.activityLevel ?? "moderate"} onChange={(e) => setSettings({ ...settings, activityLevel: e.target.value })} className="bg-transparent text-xs text-slate-900 focus:outline-none w-full cursor-pointer">
+                    <option value="sedentary">Sedentary</option>
+                    <option value="light">Lightly active</option>
+                    <option value="moderate">Moderately active</option>
+                    <option value="active">Very active</option>
+                    <option value="very">Ekstra aktif</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-3 text-center">
+              <div>
+                <p className="text-[10px] font-semibold text-slate-400">BMR (batas aman)</p>
+                <p className="text-lg font-black text-slate-900 font-mono">{plan.bmr || "—"}</p>
+                <p className="text-[9px] text-slate-400 font-mono">kcal/hari</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-slate-400">TDEE</p>
+                <p className="text-lg font-black text-slate-900 font-mono">{plan.tdee || "—"}</p>
+                <p className="text-[9px] text-slate-400 font-mono">kcal/hari</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-emerald-600">Target Kalori</p>
+                <p className="text-lg font-black text-emerald-600 font-mono">{plan.target || "—"}</p>
+                <p className="text-[9px] text-slate-400 font-mono">kcal/hari</p>
+              </div>
+            </div>
+            {plan.target === 0 && <p className="text-[11px] text-amber-600">Isi tanggal lahir buat lihat hitungan BMR/TDEE.</p>}
           </div>
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-500">Nama</label>
