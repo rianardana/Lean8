@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { api } from "@/lib/api";
 import { wibDate } from "@/lib/time";
 import { resizeImage } from "@/lib/image";
@@ -27,7 +27,9 @@ export const CalorieTracker: React.FC = () => {
   const [photoLoading, setPhotoLoading] = useState(false);
   const [photoMsg, setPhotoMsg] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [foodLoading, setFoodLoading] = useState(false);
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogData[]>([]);
+  const logging = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -89,12 +91,20 @@ export const CalorieTracker: React.FC = () => {
   };
 
   const addFood = async (food: FoodItemData) => {
-    await api.logMeal({
-      date, mealType, foodName: food.name, quantity: 1,
-      calories: food.calories, protein: food.protein, carbs: food.carbs, fat: food.fat,
-    });
-    setQuery(""); setResults([]);
-    await refresh();
+    if (logging.current) return;
+    logging.current = true;
+    setFoodLoading(true);
+    try {
+      await api.logMeal({
+        date, mealType, foodName: food.name, quantity: 1,
+        calories: food.calories, protein: food.protein, carbs: food.carbs, fat: food.fat,
+      });
+      setQuery(""); setResults([]);
+      await refresh();
+    } finally {
+      logging.current = false;
+      setFoodLoading(false);
+    }
   };
 
   const removeMeal = async (id: number) => {
@@ -104,7 +114,8 @@ export const CalorieTracker: React.FC = () => {
 
   const handlePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || logging.current) return;
+    logging.current = true;
     setPhotoLoading(true); setPhotoMsg("");
     try {
       const base64 = await resizeImage(file, 1024, "image/jpeg", 0.8);
@@ -117,9 +128,11 @@ export const CalorieTracker: React.FC = () => {
     } catch (err) {
       const msg = String(err);
       setPhotoMsg(msg.includes("429") ? `Limit foto hari ini habis (${MAX_PHOTO_PER_DAY}/${MAX_PHOTO_PER_DAY}). Input manual dulu ya!` : "Analisis gagal — coba input manual.");
+    } finally {
+      logging.current = false;
+      setPhotoLoading(false);
+      e.target.value = "";
     }
-    setPhotoLoading(false);
-    e.target.value = "";
   };
 
   const totals = meals.reduce(
@@ -230,7 +243,7 @@ export const CalorieTracker: React.FC = () => {
         {results.length > 0 && (
           <div className="absolute z-20 mt-1 w-full bg-white border border-slate-300 rounded-2xl overflow-hidden shadow-2xl max-h-56 overflow-y-auto">
             {results.map((f) => (
-              <button key={f.id} onClick={() => addFood(f)} className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-slate-100 transition-colors">
+              <button key={f.id} onClick={() => addFood(f)} disabled={foodLoading} className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-slate-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
                 <div>
                   <p className="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
                     {f.name}
@@ -238,7 +251,15 @@ export const CalorieTracker: React.FC = () => {
                   </p>
                   <p className="text-[10px] text-slate-500">{f.serving}</p>
                 </div>
-                <span className="text-xs font-mono text-orange-600 flex items-center gap-1">{f.calories} kcal <Plus className="w-3 h-3" /></span>
+                {foodLoading ? (
+                  <span className="inline-flex gap-1 shrink-0">
+                    <span className="w-2 h-2 bg-orange-600 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-2 h-2 bg-orange-600 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-2 h-2 bg-orange-600 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </span>
+                ) : (
+                  <span className="text-xs font-mono text-orange-600 flex items-center gap-1">{f.calories} kcal <Plus className="w-3 h-3" /></span>
+                )}
               </button>
             ))}
           </div>
@@ -247,10 +268,10 @@ export const CalorieTracker: React.FC = () => {
 
       {/* TOMBOL FOTO MAKANAN — Kamera / Gallery */}
       <div className="flex flex-col items-center justify-center gap-3 pt-1">
-        <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
+        <div className="relative grid grid-cols-2 gap-3 w-full sm:w-auto">
           <label className={`relative rounded-2xl overflow-hidden border-2 transition ${
-            photoLeft === 0
-              ? "border-slate-200 opacity-60 cursor-not-allowed"
+            photoLeft === 0 || photoLoading
+              ? "border-slate-200 opacity-60 cursor-not-allowed pointer-events-none"
               : "border-orange-500/30 cursor-pointer hover:border-orange-500 active:scale-95"
           }`}>
             <img src="/camera.webp" alt="Camera" className="w-full h-36 object-contain" />
@@ -259,14 +280,25 @@ export const CalorieTracker: React.FC = () => {
           </label>
 
           <label className={`relative rounded-2xl overflow-hidden border-2 transition ${
-            photoLeft === 0
-              ? "border-slate-200 opacity-60 cursor-not-allowed"
+            photoLeft === 0 || photoLoading
+              ? "border-slate-200 opacity-60 cursor-not-allowed pointer-events-none"
               : "border-orange-500/30 cursor-pointer hover:border-orange-500 active:scale-95"
           }`}>
             <img src="/galery.webp" alt="Gallery" className="w-full h-36 object-contain" />
             <span className="block text-center text-xs font-semibold text-slate-700 py-1.5">Gallery</span>
             <input type="file" accept="image/*" className="hidden" onChange={handlePhoto} disabled={photoLoading || photoLeft === 0} />
           </label>
+
+          {photoLoading && (
+            <div className="absolute inset-0 z-10 bg-white/75 backdrop-blur-[1px] rounded-2xl flex flex-col items-center justify-center gap-2">
+              <span className="inline-flex gap-1">
+                <span className="w-2 h-2 bg-orange-600 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                <span className="w-2 h-2 bg-orange-600 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                <span className="w-2 h-2 bg-orange-600 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+              </span>
+              <span className="text-[11px] font-semibold text-slate-700">Menganalisis foto...</span>
+            </div>
+          )}
         </div>
 
         {photoMsg && <span className="text-[11px] text-rose-600 text-center">{photoMsg}</span>}
