@@ -128,9 +128,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaved }) => {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-3 text-center">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-3 text-center">
               <div>
-                <p className="text-[10px] font-semibold text-slate-400">BMR (batas aman)</p>
+                <p className="text-[10px] font-semibold text-slate-400">BMR</p>
                 <p className="text-lg font-black text-slate-900 font-mono">{plan.bmr || "—"}</p>
                 <p className="text-[9px] text-slate-400 font-mono">kcal/hari</p>
               </div>
@@ -142,6 +142,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaved }) => {
               <div>
                 <p className="text-[10px] font-semibold text-emerald-600">Target Kalori</p>
                 <p className="text-lg font-black text-emerald-600 font-mono">{plan.target || "—"}</p>
+                <p className="text-[9px] text-slate-400 font-mono">kcal/hari</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-slate-400">Batas Aman</p>
+                <p className="text-lg font-black text-slate-900 font-mono">{plan.floor || "—"}</p>
                 <p className="text-[9px] text-slate-400 font-mono">kcal/hari</p>
               </div>
             </div>

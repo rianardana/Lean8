@@ -27,6 +27,9 @@ export function calcBmr(sex: Sex, weightKg: number, heightCm: number, age: numbe
   return Math.round(sex === "female" ? base - 161 : base + 5);
 }
 
+const CUT_DEFICIT = 0.2; // 20% di bawah TDEE
+const BULK_SURPLUS = 0.1; // 10% di atas TDEE
+
 export function calcCaloriePlan(opts: {
   sex: Sex;
   weightKg: number;
@@ -34,13 +37,17 @@ export function calcCaloriePlan(opts: {
   age: number | null;
   activity: ActivityLevel;
   goal: Goal;
-}): { bmr: number; tdee: number; target: number } {
+}): { bmr: number; tdee: number; target: number; floor: number } {
   if (opts.age == null || opts.age < 10 || opts.weightKg <= 0 || opts.heightCm <= 0) {
-    return { bmr: 0, tdee: 0, target: 0 };
+    return { bmr: 0, tdee: 0, target: 0, floor: 0 };
   }
   const bmr = calcBmr(opts.sex, opts.weightKg, opts.heightCm, opts.age);
   const tdee = Math.round(bmr * (ACTIVITY_FACTORS[opts.activity] ?? 1.2));
-  // cut: defisit ~500 kcal/hari (≈0.5 kg/minggu), tapi jangan turun di bawah BMR (batas aman).
-  const target = opts.goal === "cut" ? Math.max(bmr, tdee - 500) : tdee + 300;
-  return { bmr, tdee, target };
+  // Batas aman = minimal intake, bukan BMR. Makan di bawah TDEE itu tujuannya,
+  // dan BMR cuma kalori saat istirahat — bukan garis bahaya, jadi jangan dijadiin floor.
+  const floor = opts.sex === "female" ? 1200 : 1500;
+  const target = opts.goal === "cut"
+    ? Math.max(floor, Math.round(tdee * (1 - CUT_DEFICIT)))
+    : Math.round(tdee * (1 + BULK_SURPLUS));
+  return { bmr, tdee, target, floor };
 }

@@ -26,6 +26,7 @@ export const CalorieTracker: React.FC = () => {
   const [mealType, setMealType] = useState("breakfast");
   const [target, setTarget] = useState(2000);
   const [bmr, setBmr] = useState(0);
+  const [floor, setFloor] = useState(0);
   const [photoLoading, setPhotoLoading] = useState(false);
   const [photoMsg, setPhotoMsg] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -57,14 +58,16 @@ export const CalorieTracker: React.FC = () => {
         const s = await api.getSettings();
         if (isMounted) {
           setTarget(s.calorieTarget ?? 2000);
-          setBmr(calcCaloriePlan({
+          const plan = calcCaloriePlan({
             sex: (s.sex as "male" | "female") ?? "male",
             weightKg: s.currentWeight,
             heightCm: s.heightCm,
             age: ageFromBirthdate(s.birthdate),
             activity: (s.activityLevel as ActivityLevel) ?? "moderate",
             goal: (s.goal ?? "cut") as Goal,
-          }).bmr);
+          });
+          setBmr(plan.bmr);
+          setFloor(plan.floor);
         }
       } catch { /* ignore */ }
     })();
@@ -224,9 +227,9 @@ export const CalorieTracker: React.FC = () => {
         </div>
         {bmr > 0 && (
           <div className="flex items-center justify-between text-[11px]">
-            <span className="text-slate-400 font-mono">BMR batas aman: {bmr} kcal</span>
-            {totals.calories > 0 && totals.calories < bmr && (
-              <span className="text-amber-600 font-semibold">Di bawah BMR — jangan terlalu rendah ⚠️</span>
+            <span className="text-slate-400 font-mono">BMR {bmr} · batas aman {floor} kcal</span>
+            {totals.calories > 0 && floor > 0 && totals.calories < floor && (
+              <span className="text-amber-600 font-semibold">Di bawah batas aman {floor} kcal ⚠️</span>
             )}
           </div>
         )}
