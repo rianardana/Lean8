@@ -18,12 +18,16 @@ function fmtId(iso: string) {
   return `${d} ${BULAN[m - 1]} ${y}`
 }
 
-// kg/minggu dari trend log berat (indeks = hari, sama kaya calcEta di dashboard).
-function weeklyRate(weights: { weight: number }[]): number {
+// kg/minggu dari trend log berat, pakai hari aktual (bukan indeks).
+function weeklyRate(weights: { weight: number; date: string }[]): number {
   const n = weights.length
   if (n < 2) return 0
+  const first = new Date(weights[0].date + 'T00:00:00').getTime()
   let sx = 0, sy = 0, sxy = 0, sxx = 0
-  weights.forEach((w, i) => { sx += i; sy += w.weight; sxy += i * w.weight; sxx += i * i })
+  weights.forEach((w) => {
+    const x = (new Date(w.date + 'T00:00:00').getTime() - first) / 86400000
+    sx += x; sy += w.weight; sxy += x * w.weight; sxx += x * x
+  })
   const denom = n * sxx - sx * sx
   if (denom === 0) return 0
   return ((n * sxy - sx * sy) / denom) * 7

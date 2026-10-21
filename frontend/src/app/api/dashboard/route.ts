@@ -7,14 +7,18 @@ function diffDays(a: string, b: string) {
   return Math.round((new Date(b + 'T00:00:00').getTime() - new Date(a + 'T00:00:00').getTime()) / 86400000)
 }
 
-function calcEta(weights: { weight: number }[], target: number): { etaDays: number; etaDate: string } | null {
+function calcEta(weights: { weight: number; date: string }[], target: number): { etaDays: number; etaDate: string } | null {
   if (weights.length < 2) return null
+  const first = new Date(weights[0].date + 'T00:00:00').getTime()
   const n = weights.length
   let sx = 0, sy = 0, sxy = 0, sxx = 0
-  weights.forEach((w, i) => { sx += i; sy += w.weight; sxy += i * w.weight; sxx += i * i })
+  weights.forEach((w) => {
+    const x = (new Date(w.date + 'T00:00:00').getTime() - first) / 86400000 // hari sejak log pertama
+    sx += x; sy += w.weight; sxy += x * w.weight; sxx += x * x
+  })
   const denom = n * sxx - sx * sx
   if (denom === 0) return null
-  const slope = (n * sxy - sx * sy) / denom // kg per log, positif = naik, negatif = turun
+  const slope = (n * sxy - sx * sy) / denom // kg per hari, positif = naik, negatif = turun
   if (Math.abs(slope) < 1e-9) return null
   const etaDays = Math.round((target - weights[n - 1].weight) / slope)
   if (etaDays <= 0) return null
