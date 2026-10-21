@@ -144,6 +144,25 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ onWeightLogged }) =>
     return `${x},${y}`;
   }).join(" ");
 
+  // measurements[0] = terbaru (orderBy date desc), jadi baseline = paling lama (log pertama).
+  const baseline = measurements.length ? measurements[measurements.length - 1] : null;
+  const renderM = (m: BodyMeasurementData, key: MKey) => {
+    const v = m[key];
+    if (v == null) return <td key={key} className="py-2.5 px-3 text-slate-400">-</td>;
+    const base = baseline?.[key] ?? null;
+    const delta = base != null ? Math.round((v - base) * 10) / 10 : 0;
+    const color = delta < 0 ? "text-emerald-600" : delta > 0 ? "text-rose-500" : "text-slate-300";
+    const arrow = delta < 0 ? "▾" : delta > 0 ? "▴" : "";
+    return (
+      <td key={key} className="py-2.5 px-3 font-bold text-slate-900">
+        {v}
+        {base != null && delta !== 0 && (
+          <span className={`ml-1.5 font-mono text-[10px] ${color}`}>{arrow}{Math.abs(delta)}</span>
+        )}
+      </td>
+    );
+  };
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -228,7 +247,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ onWeightLogged }) =>
         <div>
           <span className="text-xs font-mono text-emerald-600 uppercase tracking-wider">Body Measurements</span>
           <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">Ukuran Tubuh <Ruler className="w-4 h-4 text-emerald-600" /></h3>
-          <p className="text-[11px] text-slate-400">Lingkar dalam cm. Kosongkan yang ga diukur.</p>
+          <p className="text-[11px] text-slate-400">Lingkar dalam cm. Kosongkan yang ga diukur. Δ = perubahan dari log pertama.</p>
         </div>
         <form onSubmit={handleMeasurementSubmit} className="space-y-3">
           <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
@@ -257,10 +276,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ onWeightLogged }) =>
                 {measurements.map((m) => (
                   <tr key={m.id} className="hover:bg-slate-100 transition-colors">
                     <td className="py-2.5 px-3 font-mono">{m.date}</td>
-                    <td className="py-2.5 px-3 font-bold text-slate-900">{m.waist ?? "-"}</td>
-                    <td className="py-2.5 px-3 font-bold text-slate-900">{m.chest ?? "-"}</td>
-                    <td className="py-2.5 px-3 font-bold text-slate-900">{m.arm ?? "-"}</td>
-                    <td className="py-2.5 px-3 font-bold text-slate-900">{m.thigh ?? "-"}</td>
+                    {MFIELDS.map((f) => renderM(m, f.key))}
                   </tr>
                 ))}
               </tbody>

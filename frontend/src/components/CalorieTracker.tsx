@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { wibDate } from "@/lib/time";
 import { resizeImage } from "@/lib/image";
 import { FoodItemData, MealLogData, WorkoutLogData } from "@/types";
+import { calcCaloriePlan, ageFromBirthdate, ActivityLevel, Goal } from "@/lib/tdde";
 import { Flame, Search, Plus, Trash2, Sparkles } from "lucide-react";
 
 const MEALS = [
@@ -24,6 +25,7 @@ export const CalorieTracker: React.FC = () => {
   const [meals, setMeals] = useState<MealLogData[]>([]);
   const [mealType, setMealType] = useState("breakfast");
   const [target, setTarget] = useState(2000);
+  const [bmr, setBmr] = useState(0);
   const [photoLoading, setPhotoLoading] = useState(false);
   const [photoMsg, setPhotoMsg] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -53,7 +55,17 @@ export const CalorieTracker: React.FC = () => {
     (async () => {
       try {
         const s = await api.getSettings();
-        if (isMounted) setTarget((s as { calorieTarget?: number }).calorieTarget ?? 2000);
+        if (isMounted) {
+          setTarget(s.calorieTarget ?? 2000);
+          setBmr(calcCaloriePlan({
+            sex: (s.sex as "male" | "female") ?? "male",
+            weightKg: s.currentWeight,
+            heightCm: s.heightCm,
+            age: ageFromBirthdate(s.birthdate),
+            activity: (s.activityLevel as ActivityLevel) ?? "moderate",
+            goal: (s.goal ?? "cut") as Goal,
+          }).bmr);
+        }
       } catch { /* ignore */ }
     })();
     return () => { isMounted = false; };
@@ -210,6 +222,14 @@ export const CalorieTracker: React.FC = () => {
         <div className="w-full h-3 bg-slate-50 rounded-full overflow-hidden p-0.5 border border-slate-200">
           <div className={`h-full rounded-full transition-all duration-300 ${totals.calories > target ? "bg-gradient-to-r from-rose-500 to-orange-500" : "bg-gradient-to-r from-orange-500 to-amber-400"}`} style={{ width: `${pct}%` }} />
         </div>
+        {bmr > 0 && (
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-slate-400 font-mono">BMR batas aman: {bmr} kcal</span>
+            {totals.calories > 0 && totals.calories < bmr && (
+              <span className="text-amber-600 font-semibold">Di bawah BMR — jangan terlalu rendah ⚠️</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Pilih waktu makan */}
