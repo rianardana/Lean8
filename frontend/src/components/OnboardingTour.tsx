@@ -1,13 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, ChevronRight, Check, LayoutDashboard, CheckSquare, Flame, TrendingDown, Sparkles } from "lucide-react";
+import { X, ChevronRight, Check, LayoutDashboard, CheckSquare, Flame, TrendingDown, Sparkles, Dumbbell, ChefHat, Trophy } from "lucide-react";
 
 const STEPS = [
   { icon: LayoutDashboard, title: "Dashboard", desc: "Lihat berat sekarang, progress, dan BMI kamu dalam satu layar." },
   { icon: CheckSquare, title: "Habit Harian", desc: "Centang checklist < 60 detik: workout, fasting, protein, air, tidur, no snack." },
-  { icon: Flame, title: "Kalori", desc: "Log makanan & kalori — bisa lewat foto makanan pakai AI." },
+  { icon: Flame, title: "Kalori", desc: "Log makanan & kalori bisa lewat foto makanan pakai AI." },
+  { icon: Dumbbell, title: "Workout", desc: "Catat latihan dan kalori yang terbakar." },
+  { icon: ChefHat, title: "Meal Prep", desc: "Rencanakan menu & variasi makanan harian." },
   { icon: TrendingDown, title: "Progres", desc: "Pantau grafik berat badan & estimasi tanggal capai target." },
+  { icon: Trophy, title: "Prestasi", desc: "Lihat streak, badge, dan pencapaianmu." },
   { icon: Sparkles, title: "AI Coach", desc: "Tanya coach soal diet, nutrisi, dan cara jaga konsistensi." },
 ];
 

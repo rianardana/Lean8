@@ -1,8 +1,22 @@
 import { DashboardData, DailyLogData, WeightLogData, UserSettingsData, AiReviewData, MealLogData, FoodItemData, WorkoutLogData, FastData, EtaInsightData, ProgramEnrollmentData, ProgressPhotoData, BodyMeasurementData, WeeklyRecapData } from "@/types";
 import { wibDate } from "@/lib/time";
+import { firebaseAuth } from "@/lib/firebase";
+
+async function getAuthToken(): Promise<string | null> {
+  const user = firebaseAuth.currentUser;
+  if (!user) return null;
+  try {
+    return await user.getIdToken();
+  } catch {
+    return null;
+  }
+}
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, { ...options, headers: { "Content-Type": "application/json", ...options?.headers }, cache: "no-store" });
+  const token = await getAuthToken();
+  const headers: Record<string, string> = { "Content-Type": "application/json", ...(options?.headers as Record<string, string> | undefined) };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(url, { ...options, headers, cache: "no-store" });
   if (!res.ok) throw new Error(`API ${url} failed: ${res.status}`);
   return res.json();
 }

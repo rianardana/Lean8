@@ -23,17 +23,32 @@ import { MilestoneToast } from "@/components/MilestoneToast";
 import { WeightNudge } from "@/components/WeightNudge";
 import { DashboardData } from "@/types";
 import { api } from "@/lib/api";
-import { authClient } from "@/lib/auth-client";
+import { firebaseAuth } from "@/lib/firebase";
+import { onAuthStateChanged, signOut, User as FirebaseUser } from "firebase/auth";
 import Swal from "sweetalert2";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { OnboardingTour } from "@/components/OnboardingTour";
 
 export default function Home() {
   const router = useRouter();
-  const { data: session, isPending } = authClient.useSession();
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [isPending, setIsPending] = useState(true);
+  useEffect(() => {
+    const unsub = onAuthStateChanged(firebaseAuth, (u) => {
+      setFirebaseUser(u);
+      setIsPending(false);
+    });
+    return () => unsub();
+  }, []);
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [showTour, setShowTour] = useState(false);
+  const [showTour, setShowTour] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const params = new URLSearchParams(window.location.search);
+    const force = sessionStorage.getItem("leanmode_show_tour") === "1";
+    if (force) { sessionStorage.removeItem("leanmode_show_tour"); return true; }
+    return params.get("welcome") === "1" && localStorage.getItem("leanmode_tour_seen") !== "1";
+  });
   const [coachOpen, setCoachOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -78,7 +93,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (!session) return;
+    if (!firebaseUser) return;
     let isMounted = true;
     (async () => {
       try {
@@ -87,14 +102,14 @@ export default function Home() {
       } catch { /* handled */ }
     })();
     return () => { isMounted = false; };
-  }, [activeTab, session]);
+  }, [activeTab, firebaseUser]);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("welcome") === "1" && localStorage.getItem("leanmode_tour_seen") !== "1") {
-      setShowTour(true);
-    }
-  }, []);
+    if (isPending) return;
+    if (!firebaseUser) router.push("/login");
+  }, [isPending, firebaseUser, router]);
+
+  // welcome tour handled by initial state above
 
   // Double-back-to-exit saat di-install sebagai app (standalone).
   // PWA tidak bisa menutup diri secara programatik (history.back() no-op),
@@ -131,7 +146,7 @@ export default function Home() {
   };
 
   const handleLogout = async () => {
-    await authClient.signOut();
+    await signOut(firebaseAuth);
     router.push("/login");
     router.refresh();
   };
@@ -144,7 +159,7 @@ export default function Home() {
     );
   }
 
-  const user = session?.user;
+  const user = firebaseUser;
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-emerald-500/30 selection:text-emerald-600">
@@ -161,7 +176,7 @@ export default function Home() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold bg-gradient-to-r from-slate-900 via-emerald-600 to-teal-600 bg-clip-text text-transparent">{user?.name ?? "User"}</span>
+            <span className="text-sm font-bold bg-gradient-to-r from-slate-900 via-emerald-600 to-teal-600 bg-clip-text text-transparent">{user?.displayName ?? user?.email ?? "User"}</span>
             <button
               onClick={handleLogout}
               className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 hover:text-slate-900 transition"
@@ -245,11 +260,21 @@ export default function Home() {
                   </button>
                 );
               })}
+              <button
+                onClick={() => { setShowTour(true); setMoreOpen(false); }}
+                className="flex flex-col items-center gap-2 py-5 rounded-2xl border transition-all bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300"
+              >
+                <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                  <path d="M12 17h.01" />
+                </svg>
+                <span className="text-xs font-semibold">Petunjuk</span>
+              </button>
             </div>
           </div>
         </div>
       )}
-
       <InstallPrompt />
 
       <MilestoneToast />

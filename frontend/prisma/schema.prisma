@@ -9,6 +9,7 @@ datasource db {
 
 model User {
   id                 Int        @id @default(autoincrement())
+  firebaseUid        String?    @unique
   name               String
   email              String     @unique
   emailVerified      Boolean    @default(false)
@@ -26,54 +27,18 @@ model User {
   proteinTargetGrams Int        @default(120)
   calorieTarget      Int        @default(2000)
   goal               String     @default("cut") // cut | bulk
+  onboardingCompleted Boolean   @default(true)
+  fitnessExperience String? // beginner | intermediate | advanced
+  workoutFrequency  Int? // sessions per week
   dailyLogs          DailyLog[]
   weightLogs         WeightLog[]
   mealLogs           MealLog[]
   workoutLogs        WorkoutLog[]
   fasts              Fast[]
-  sessions           Session[]
-  accounts           Account[]
+
   programEnrollments ProgramEnrollment[]
   progressPhotos     ProgressPhoto[]
   bodyMeasurements   BodyMeasurement[]
-}
-
-model Session {
-  id        Int      @id @default(autoincrement())
-  expiresAt DateTime
-  token     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ipAddress String?
-  userAgent String?
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Account {
-  id                    Int       @id @default(autoincrement())
-  accountId             String
-  providerId            String
-  userId                Int
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
-  scope                 String?
-  password              String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-}
-
-model Verification {
-  id         Int      @id @default(autoincrement())
-  identifier String
-  value      String
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
 }
 
 model WeightLog {

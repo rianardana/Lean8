@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { UserSettingsData } from "@/types";
 import { api } from "@/lib/api";
-import { authClient } from "@/lib/auth-client";
+import { firebaseAuth } from "@/lib/firebase";
+import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { calcCaloriePlan, ageFromBirthdate, ActivityLevel, Goal } from "@/lib/tdde";
 import { Save, CheckCircle2, User, Target, Dumbbell, Moon, Utensils, Ruler, Scale, TrendingDown, TrendingUp, Calendar, Activity } from "lucide-react";
 
@@ -225,13 +226,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaved }) => {
             e.preventDefault();
             setChangingPw(true);
             setPwMsg(null);
-            const { error } = await authClient.changePassword({ currentPassword, newPassword });
-            if (error) {
-              setPwMsg({ ok: false, text: error.message ?? "Gagal mengganti password" });
-            } else {
+            try {
+              const user = firebaseAuth.currentUser;
+              if (!user || !user.email) throw new Error("Tidak ada user");
+              const cred = EmailAuthProvider.credential(user.email, currentPassword);
+              await reauthenticateWithCredential(user, cred);
+              await updatePassword(user, newPassword);
               setPwMsg({ ok: true, text: "Password berhasil diganti!" });
               setCurrentPassword("");
               setNewPassword("");
+            } catch (err: unknown) {
+              setPwMsg({ ok: false, text: err instanceof Error ? err.message : "Gagal mengganti password" });
             }
             setChangingPw(false);
           }}
