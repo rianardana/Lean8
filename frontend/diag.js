@@ -32,9 +32,10 @@ if (!admin.getApps().length) {
   });
   const data = await res.json();
   if (!data.idToken) { console.log("TOKEN ERROR:", JSON.stringify(data)); return; }
-  const apiRes = await fetch("https://lean8.vercel.app/api/dashboard", {
-    headers: { Authorization: `Bearer ${data.idToken}` },
-  });
-  console.log("STATUS:", apiRes.status);
-  console.log("BODY:", await apiRes.text());
+  for (const p of ["/api/user", "/api/dashboard", "/api/stats"]) {
+    const apiRes = await fetch("https://lean8.vercel.app" + p, {
+      headers: { Authorization: `Bearer ${data.idToken}` },
+    });
+    console.log(p, apiRes.status, await apiRes.text());
+  }
 })();
