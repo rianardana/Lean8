@@ -31,31 +31,36 @@ export async function GET(req: NextRequest) {
   const userId = await getSessionUserId()
   if (userId == null) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const [user, todayLog, weightLogs] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId } }),
-    prisma.dailyLog.findUnique({ where: { userId_date: { userId, date: wibDate() } } }),
-    prisma.weightLog.findMany({ where: { userId }, orderBy: { date: 'asc' } }),
-  ])
+  try {
+    const [user, todayLog, weightLogs] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId } }),
+      prisma.dailyLog.findUnique({ where: { userId_date: { userId, date: wibDate() } } }),
+      prisma.weightLog.findMany({ where: { userId }, orderBy: { date: 'asc' } }),
+    ])
 
-  const initialWeight = user?.currentWeight ?? 86
-  const targetWeight = user?.targetWeight ?? 65
-  const latestWeight = weightLogs.length ? weightLogs[weightLogs.length - 1].weight : initialWeight
-  const goalDelta = targetWeight - initialWeight // + = naik (bulk), - = turun (cut)
-  const achieved = latestWeight - initialWeight
-  const progressPercent = goalDelta !== 0 ? Math.min(100, Math.max(0, Math.round((achieved / goalDelta) * 1000) / 10)) : 0
-  const dayNumber = weightLogs.length ? diffDays(weightLogs[0].date, wibDate()) + 1 : 1
-  const completedCount = todayLog ? [todayLog.workout, todayLog.ifCompleted, todayLog.proteinCompleted, todayLog.waterCompleted, todayLog.sleepCompleted, todayLog.noSnack].filter(Boolean).length : 0
-  const eta = calcEta(weightLogs, targetWeight)
+    const initialWeight = user?.currentWeight ?? 86
+    const targetWeight = user?.targetWeight ?? 65
+    const latestWeight = weightLogs.length ? weightLogs[weightLogs.length - 1].weight : initialWeight
+    const goalDelta = targetWeight - initialWeight // + = naik (bulk), - = turun (cut)
+    const achieved = latestWeight - initialWeight
+    const progressPercent = goalDelta !== 0 ? Math.min(100, Math.max(0, Math.round((achieved / goalDelta) * 1000) / 10)) : 0
+    const dayNumber = weightLogs.length ? diffDays(weightLogs[0].date, wibDate()) + 1 : 1
+    const completedCount = todayLog ? [todayLog.workout, todayLog.ifCompleted, todayLog.proteinCompleted, todayLog.waterCompleted, todayLog.sleepCompleted, todayLog.noSnack].filter(Boolean).length : 0
+    const eta = calcEta(weightLogs, targetWeight)
 
-  return NextResponse.json({
-    user: {
-      name: user?.name ?? 'User',
-      heightCm: user?.heightCm ?? 175, currentWeight: latestWeight, targetWeight, initialWeight,
-      workoutTime: user?.workoutTime ?? '07:00', sleepTime: user?.sleepTime ?? '22:00', proteinTargetGrams: user?.proteinTargetGrams ?? 120,
-      goal: user?.goal ?? 'cut',
-    },
-    stats: { currentWeight: latestWeight, targetWeight, initialWeight, remainingKg: Math.round(Math.abs(targetWeight - latestWeight) * 10) / 10, kgChange: Math.round(achieved * 10) / 10, progressPercent, dayNumber, completedToday: completedCount, hasTodayLog: !!todayLog, eta },
-    weightLogs,
-    todayLog: todayLog ?? null,
-  })
+    return NextResponse.json({
+      user: {
+        name: user?.name ?? 'User',
+        heightCm: user?.heightCm ?? 175, currentWeight: latestWeight, targetWeight, initialWeight,
+        workoutTime: user?.workoutTime ?? '07:00', sleepTime: user?.sleepTime ?? '22:00', proteinTargetGrams: user?.proteinTargetGrams ?? 120,
+        goal: user?.goal ?? 'cut',
+      },
+      stats: { currentWeight: latestWeight, targetWeight, initialWeight, remainingKg: Math.round(Math.abs(targetWeight - latestWeight) * 10) / 10, kgChange: Math.round(achieved * 10) / 10, progressPercent, dayNumber, completedToday: completedCount, hasTodayLog: !!todayLog, eta },
+      weightLogs,
+      todayLog: todayLog ?? null,
+    })
+  } catch (err) {
+    console.error('DASHBOARD FAILED:', err)
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err), stack: err instanceof Error ? err.stack : undefined }, { status: 500 })
+  }
 }
