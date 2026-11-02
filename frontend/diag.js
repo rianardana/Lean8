@@ -32,8 +32,8 @@ if (!admin.getApps().length) {
   });
   const data = await res.json();
   if (!data.idToken) { console.log("TOKEN ERROR:", JSON.stringify(data)); return; }
-  for (const p of ["/api/user", "/api/dashboard", "/api/stats"]) {
-    const apiRes = await fetch("https://lean8.vercel.app" + p, {
+  for (const p of ["/api/auth-debug", "/api/dashboard", "/api/stats"]) {
+    const apiRes = await fetch("http://localhost:3000" + p, {
       headers: { Authorization: `Bearer ${data.idToken}` },
     });
     console.log(p, apiRes.status, await apiRes.text());
