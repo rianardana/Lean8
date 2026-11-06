@@ -101,9 +101,10 @@ export default function OnboardingPage() {
         sleepTime: form.sleepTime,
         proteinTargetGrams: parseInt(form.proteinTargetGrams) || 120,
       });
+      const token = await firebaseAuth.currentUser?.getIdToken();
       await fetch("/api/user", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({
           onboardingCompleted: true,
           fitnessExperience: form.fitnessExperience,
