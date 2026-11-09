@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { sendPushToUser, webPushConfigured } from "@/lib/server-push";
-import { minutesOfDay, parseHHMM, wibDate, wibHourMinute } from "@/lib/time";
+import { minutesOfDay, parseHHMM, wibHourMinute } from "@/lib/time";
 
 type RunStats = {
   ok: boolean;
@@ -13,7 +13,7 @@ type RunStats = {
   details: Array<Record<string, unknown>>;
 };
 
-function inWindow(scheduledMin: number, nowMin: number, windowMinutes = 59) {
+function inWindow(scheduledMin: number, nowMin: number, windowMinutes = 1439) {
   const diff = nowMin - scheduledMin;
   return diff >= 0 && diff <= windowMinutes;
 }
@@ -65,8 +65,8 @@ export async function runScheduledNotifications(options?: { includeWeekly?: bool
         stats.skipped += 1;
         continue;
       }
-      // only nudge within 12h after planned end to avoid blasting very old sessions
-      if (Date.now() - endAt.getTime() > 12 * 3600_000) {
+      // daily cron: allow up to 25h after planned end so a once-a-day run still catches it
+      if (Date.now() - endAt.getTime() > 25 * 3600_000) {
         stats.skipped += 1;
         continue;
       }
@@ -183,7 +183,7 @@ export async function runScheduledNotifications(options?: { includeWeekly?: bool
       select: { id: true },
     });
     // Send once/day around 19:00 WIB (window) to avoid depending on old cron time
-    const weeklyWindow = inWindow(minutesOfDay(19, 0), nowMin);
+    const weeklyWindow = inWindow(minutesOfDay(19, 0), nowMin, 1439);
     for (const u of weeklyUsers) {
       stats.checked.weekly += 1;
       try {
