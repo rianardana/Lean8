@@ -19,7 +19,9 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, { ...options, headers, cache: "no-store" });
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    throw new Error(`API ${url} failed: ${res.status}${detail ? ` - ${detail}` : ""}`);
+    const err = new Error(`API ${url} failed: ${res.status}${detail ? ` - ${detail}` : ""}`) as Error & { status?: number };
+    err.status = res.status;
+    throw err;
   }
   return res.json();
 }

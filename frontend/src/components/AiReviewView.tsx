@@ -70,8 +70,12 @@ export const AiReviewView: React.FC<{ onClose?: () => void }> = ({ onClose }) =>
       const { reply } = await api.chatCoach([...historyForApi, { role: 'user', content: userMsg.content }]);
       setMessages([...newMessages, { role: 'assistant', content: reply }]);
     } catch (err) {
-      const detail = err instanceof Error ? err.message : 'Maaf, terjadi error. Coba lagi ya.';
-      setMessages([...newMessages, { role: 'assistant', content: `Maaf, terjadi error. ${detail}` }]);
+      console.error(err);
+      const status = (err as { status?: number } | null)?.status;
+      const msg = status === 401
+        ? 'Sesi kamu habis, silakan login ulang ya.'
+        : 'Maaf, terjadi error. Coba lagi ya.';
+      setMessages([...newMessages, { role: 'assistant', content: msg }]);
     }
     setChatLoading(false);
   };
