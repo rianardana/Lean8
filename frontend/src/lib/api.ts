@@ -1,4 +1,4 @@
-import { DashboardData, DailyLogData, WeightLogData, UserSettingsData, AiReviewData, MealLogData, FoodItemData, WorkoutLogData, FastData, EtaInsightData, ProgramEnrollmentData, ProgressPhotoData, BodyMeasurementData, WeeklyRecapData } from "@/types";
+import { DashboardData, DailyLogData, WeightLogData, UserSettingsData, AiReviewData, MealLogData, FoodItemData, WorkoutLogData, FastData, EtaInsightData, ProgramEnrollmentData, ProgressPhotoData, BodyMeasurementData, WeeklyRecapData, WeeklyTargetData } from "@/types";
 import { wibDate } from "@/lib/time";
 import { firebaseAuth } from "@/lib/firebase";
 
@@ -75,6 +75,25 @@ export const api = {
 
   async getWeeklyRecap(): Promise<WeeklyRecapData> {
     return request<WeeklyRecapData>(`/api/ai/weekly`);
+  },
+
+  async getWeeklyTarget(weekStart?: string): Promise<WeeklyTargetData> {
+    const qs = weekStart ? `?weekStart=${encodeURIComponent(weekStart)}` : "";
+    return request<WeeklyTargetData>(`/api/weekly-target${qs}`);
+  },
+
+  async saveWeeklyTarget(payload: {
+    weekStart?: string;
+    workoutSessions?: number;
+    fastSessions?: number;
+    fastMinHours?: number;
+    activeDays?: number;
+    reminderEnabled?: boolean;
+  }): Promise<WeeklyTargetData> {
+    return request<WeeklyTargetData>(`/api/weekly-target`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   },
 
   async getStats(): Promise<{ streak: number; days: { date: string; count: number }[] }> {

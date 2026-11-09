@@ -59,6 +59,31 @@ export interface WeeklyRecapData {
   };
 }
 
+export interface WeeklyTargetConfig {
+  weekStart: string;
+  workoutSessions: number; // 0 = tidak dipasang
+  fastSessions: number; // 0 = tidak dipasang
+  fastMinHours: number;
+  activeDays: number; // 0 = tidak dipasang
+}
+
+export interface WeeklyTargetProgressItem {
+  key: "workout" | "fast" | "activeDays";
+  label: string;
+  detail?: string;
+  target: number;
+  current: number;
+  done: boolean;
+}
+
+export interface WeeklyTargetData {
+  weekStart: string;
+  weekEnd: string;
+  config: WeeklyTargetConfig;
+  progress: WeeklyTargetProgressItem[];
+  reminderEnabled: boolean;
+}
+
 export interface UserSettingsData {
   name: string;
   heightCm: number;
@@ -72,6 +97,10 @@ export interface UserSettingsData {
   proteinTargetGrams: number;
   calorieTarget?: number;
   goal?: "cut" | "bulk";
+  weeklyReminderEnabled?: boolean;
+  fastReminderEnabled?: boolean;
+  workoutReminderEnabled?: boolean;
+  sleepReminderEnabled?: boolean;
 }
 
 export interface AiReviewData {

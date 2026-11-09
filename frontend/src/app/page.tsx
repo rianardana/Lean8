@@ -16,11 +16,13 @@ import { SettingsView } from "@/components/SettingsView";
 import { BmiVisual } from "@/components/BmiVisual";
 import { ConsistencyCard } from "@/components/ConsistencyCard";
 import { WeeklyRecap } from "@/components/WeeklyRecap";
+import { WeeklyTargetCard } from "@/components/WeeklyTargetCard";
 import { AchievementsView } from "@/components/AchievementsView";
 import { EtaInsightCard } from "@/components/EtaInsightCard";
 import { MotivationCard } from "@/components/MotivationCard";
 import { MilestoneToast } from "@/components/MilestoneToast";
 import { WeightNudge } from "@/components/WeightNudge";
+import { maybeShowWeeklyReminder } from "@/lib/weekly-reminder";
 import { DashboardData } from "@/types";
 import { api } from "@/lib/api";
 import { firebaseAuth } from "@/lib/firebase";
@@ -100,6 +102,10 @@ export default function Home() {
         const data = await api.getDashboard();
         if (isMounted) setDashboardData(data);
       } catch { /* handled */ }
+      // Reminder fallback (in-app) + ensure push subscription registered when enabled
+      if (activeTab === "dashboard") {
+        api.getWeeklyTarget().then(maybeShowWeeklyReminder).catch(() => {});
+      }
     })();
     return () => { isMounted = false; };
   }, [activeTab, firebaseUser]);
@@ -196,6 +202,7 @@ export default function Home() {
             <EtaInsightCard />
             <WeightNudge onSaved={refreshDashboard} />
             <DashboardView data={dashboardData} />
+            <WeeklyTargetCard />
             <ConsistencyCard activeDays={dashboardData.activeDays} />
             <WeeklyRecap />
           </>

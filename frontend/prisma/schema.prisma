@@ -8,37 +8,85 @@ datasource db {
 }
 
 model User {
-  id                 Int        @id @default(autoincrement())
-  firebaseUid        String?    @unique
-  name               String
-  email              String     @unique
-  emailVerified      Boolean    @default(false)
-  image              String?
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt @default(now())
-  heightCm           Float      @default(175)
-  currentWeight      Float      @default(86)
-  targetWeight       Float      @default(65)
-  sex                String     @default("male") // male | female
-  birthdate          String? // YYYY-MM-DD
-  activityLevel      String     @default("moderate") // sedentary | light | moderate | active | very
-  workoutTime        String?    @default("07:00")
-  sleepTime          String?    @default("22:00")
-  proteinTargetGrams Int        @default(120)
-  calorieTarget      Int        @default(2000)
-  goal               String     @default("cut") // cut | bulk
-  onboardingCompleted Boolean   @default(true)
-  fitnessExperience String? // beginner | intermediate | advanced
-  workoutFrequency  Int? // sessions per week
-  dailyLogs          DailyLog[]
-  weightLogs         WeightLog[]
-  mealLogs           MealLog[]
-  workoutLogs        WorkoutLog[]
-  fasts              Fast[]
+  id                    Int            @id @default(autoincrement())
+  firebaseUid           String?        @unique
+  name                  String
+  email                 String         @unique
+  emailVerified         Boolean        @default(false)
+  image                 String?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @default(now()) @updatedAt
+  heightCm              Float          @default(175)
+  currentWeight         Float          @default(86)
+  targetWeight          Float          @default(65)
+  sex                   String         @default("male") // male | female
+  birthdate             String? // YYYY-MM-DD
+  activityLevel         String         @default("moderate") // sedentary | light | moderate | active | very
+  workoutTime           String?        @default("07:00")
+  sleepTime             String?        @default("22:00")
+  proteinTargetGrams    Int            @default(120)
+  calorieTarget         Int            @default(2000)
+  goal                  String         @default("cut") // cut | bulk
+  onboardingCompleted   Boolean        @default(true)
+  fitnessExperience     String? // beginner | intermediate | advanced
+  workoutFrequency      Int? // sessions per week
+  weeklyReminderEnabled Boolean            @default(false)
+  fastReminderEnabled   Boolean            @default(false)
+  workoutReminderEnabled Boolean           @default(false)
+  sleepReminderEnabled  Boolean            @default(false)
+  dailyLogs             DailyLog[]
+  weightLogs            WeightLog[]
+  mealLogs              MealLog[]
+  workoutLogs           WorkoutLog[]
+  fasts                 Fast[]
+  weeklyTargets         WeeklyTarget[]
+  pushSubscriptions     PushSubscription[]
+  notificationLogs      NotificationLog[]
 
   programEnrollments ProgramEnrollment[]
   progressPhotos     ProgressPhoto[]
   bodyMeasurements   BodyMeasurement[]
+}
+
+model WeeklyTarget {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  weekStart       String // YYYY-MM-DD (Senin, WIB) — minggu ini
+  workoutSessions Int      @default(0) // target jumlah sesi workout; 0 = tidak dipasang
+  fastSessions    Int      @default(0) // target jumlah sesi puasa; 0 = tidak dipasang
+  fastMinHours    Int      @default(16) // minimal durasi puasa yang dihitung (jam)
+  activeDays      Int      @default(0) // target hari aktif/habit; 0 = tidak dipasang
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStart])
+}
+
+model PushSubscription {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model NotificationLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  kind      String // fast_end | workout | sleep | weekly (future)
+  refKey    String // idempotency key, e.g. fast:123, workout:2026-11-09, sleep:2026-11-09
+  sentAt    DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind, refKey])
+  @@index([kind, sentAt])
 }
 
 model WeightLog {
