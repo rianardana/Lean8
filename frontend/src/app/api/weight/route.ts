@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionUserId } from '@/lib/session'
+import { awardXp } from '@/lib/xp'
 
 export async function GET(req: NextRequest) {
   const userId = await getSessionUserId()
@@ -20,5 +21,6 @@ export async function POST(req: NextRequest) {
     update: { weight },
     create: { userId, date, weight },
   })
+  await awardXp(userId, "weight", `weight:${date}`, 10)
   return NextResponse.json(saved)
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionUserId } from '@/lib/session'
+import { awardXp } from '@/lib/xp'
 
 export async function GET(req: NextRequest) {
   const userId = await getSessionUserId()
@@ -23,6 +24,7 @@ export async function POST(req: NextRequest) {
   const saved = await prisma.mealLog.create({
     data: { userId, quantity: 1, ...input },
   })
+  await awardXp(userId, "meal", `meal:${saved.id}`, 5)
   return NextResponse.json(saved)
 }
 

@@ -8,6 +8,8 @@ export interface DashboardData {
   goal: "cut" | "bulk";
   etaDays?: number | null;
   etaDate?: string | null;
+  xp?: number;
+  level?: number;
 }
 
 export interface DailyLogData {
@@ -21,6 +23,7 @@ export interface DailyLogData {
   noSnack: boolean;
   notes?: string | null;
   completedCount?: number;
+  xpGained?: number;
 }
 
 export interface WeightLogData {

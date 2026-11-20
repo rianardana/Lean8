@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionUserId } from '@/lib/session'
 import { countCompleted } from '@/lib/stats'
+import { awardXp } from '@/lib/xp'
 
 const DEFAULT_DAILY = {
   workout: false, ifCompleted: false, proteinCompleted: false,
@@ -39,5 +40,9 @@ export async function POST(req: NextRequest) {
       sleepCompleted: input.sleepCompleted ?? false, noSnack: input.noSnack ?? false, notes: input.notes ?? null,
     },
   })
-  return NextResponse.json({ ...saved, completedCount: countCompleted(saved) })
+  const completedCount = countCompleted(saved)
+  const amount = completedCount * 10 + (completedCount === 6 ? 20 : 0)
+  const xpGained = await awardXp(userId, "daily", input.date, amount)
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { xp: true, level: true } })
+  return NextResponse.json({ ...saved, completedCount, xpGained, xp: user?.xp ?? 0, level: user?.level ?? 1 })
 }

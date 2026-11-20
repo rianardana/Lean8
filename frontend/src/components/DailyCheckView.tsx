@@ -16,6 +16,7 @@ export const DailyCheckView: React.FC<DailyCheckViewProps> = ({ onSaved }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
+  const [xpGained, setXpGained] = useState<number>(0);
 
   const [log, setLog] = useState<DailyLogData>({
     date: todayStr, workout: false, ifCompleted: false, proteinCompleted: false,
@@ -45,6 +46,7 @@ export const DailyCheckView: React.FC<DailyCheckViewProps> = ({ onSaved }) => {
     try {
       const saved = await api.saveDaily(log);
       setLog(saved);
+      setXpGained(saved.xpGained ?? 0);
       setSaveSuccess(true);
       if (onSaved) onSaved();
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -125,7 +127,7 @@ export const DailyCheckView: React.FC<DailyCheckViewProps> = ({ onSaved }) => {
    {saveSuccess && (
         <div className="flex items-center justify-center gap-2 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-sm font-semibold animate-fade-in">
           <CheckCircle2 className="w-5 h-5" />
-          Checklist tersimpan!
+          Checklist tersimpan!{xpGained > 0 ? ` +${xpGained} XP` : ""}
         </div>
       )}
 

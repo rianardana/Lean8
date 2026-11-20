@@ -54,6 +54,7 @@ export async function GET(req: NextRequest) {
         heightCm: user?.heightCm ?? 175, currentWeight: latestWeight, targetWeight, initialWeight,
         workoutTime: user?.workoutTime ?? '07:00', sleepTime: user?.sleepTime ?? '22:00', proteinTargetGrams: user?.proteinTargetGrams ?? 120,
         goal: user?.goal ?? 'cut',
+        xp: user?.xp ?? 0, level: user?.level ?? 1,
       },
       stats: { currentWeight: latestWeight, targetWeight, initialWeight, remainingKg: Math.round(Math.abs(targetWeight - latestWeight) * 10) / 10, kgChange: Math.round(achieved * 10) / 10, progressPercent, dayNumber, completedToday: completedCount, hasTodayLog: !!todayLog, eta },
       weightLogs,

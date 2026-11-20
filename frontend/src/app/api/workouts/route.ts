@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionUserId } from '@/lib/session'
 import { wibDate } from '@/lib/time'
+import { awardXp } from '@/lib/xp'
 
 // MET (intensitas) per tipe aktivitas
 const MET: Record<string, number> = {
@@ -46,6 +47,7 @@ export async function POST(req: NextRequest) {
     create: { userId, date, workout: true },
   })
 
+  await awardXp(userId, "workout", `workout:${log.id}`, 15)
   return NextResponse.json(log)
 }
 

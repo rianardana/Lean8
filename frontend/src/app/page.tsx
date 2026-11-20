@@ -21,8 +21,10 @@ import { AchievementsView } from "@/components/AchievementsView";
 import { EtaInsightCard } from "@/components/EtaInsightCard";
 import { MotivationCard } from "@/components/MotivationCard";
 import { MilestoneToast } from "@/components/MilestoneToast";
+import { XpCard } from "@/components/XpCard";
 import { WeightNudge } from "@/components/WeightNudge";
 import { maybeShowWeeklyReminder } from "@/lib/weekly-reminder";
+import { ensurePushSubscription, pushSupported } from "@/lib/push";
 import { DashboardData } from "@/types";
 import { api } from "@/lib/api";
 import { firebaseAuth } from "@/lib/firebase";
@@ -97,6 +99,10 @@ export default function Home() {
   useEffect(() => {
     if (!firebaseUser) return;
     let isMounted = true;
+    // Keep push subscription fresh (important for installed PWA).
+    if (pushSupported() && (typeof Notification !== "undefined" ? Notification.permission === "granted" : false)) {
+      ensurePushSubscription().catch(() => {});
+    }
     (async () => {
       try {
         const data = await api.getDashboard();
@@ -198,6 +204,7 @@ export default function Home() {
         {activeTab === "dashboard" && dashboardData && (
           <>
             <MotivationCard />
+            <XpCard xp={dashboardData.xp ?? 0} level={dashboardData.level ?? 1} />
             <BmiVisual weight={dashboardData.currentWeight} heightCm={dashboardData.heightCm} />
             <EtaInsightCard />
             <WeightNudge onSaved={refreshDashboard} />

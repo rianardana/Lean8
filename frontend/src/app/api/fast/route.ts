@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionUserId } from '@/lib/session'
 import { wibDate } from '@/lib/time'
+import { awardXp } from '@/lib/xp'
 
 const clampPlan = (n?: number) => Math.min(72, Math.max(4, Math.round(n || 16)))
 
@@ -83,6 +84,7 @@ export async function POST(req: NextRequest) {
       : clampPlan(Math.round((endedAt.getTime() - startedAt.getTime()) / 3600000))
     const fast = await prisma.fast.create({ data: { userId, startedAt, endedAt, planHours } })
     if (wibDate(endedAt) === wibDate()) await markIfToday(userId)
+    await awardXp(userId, "fast", `fast:${fast.id}`, 20)
     return NextResponse.json(fast)
   }
 
@@ -94,6 +96,7 @@ export async function POST(req: NextRequest) {
   if (endedAt.getTime() <= active.startedAt.getTime()) return NextResponse.json({ error: 'endedAt must be after startedAt' }, { status: 400 })
   const fast = await prisma.fast.update({ where: { id: active.id }, data: { endedAt } })
   await markIfToday(userId)
+  await awardXp(userId, "fast", `fast:${fast.id}`, 20)
   return NextResponse.json(fast)
 }
 
