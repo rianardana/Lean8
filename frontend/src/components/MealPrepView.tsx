@@ -21,6 +21,10 @@ export const MealPrepView: React.FC = () => {
   const [resolveLoading, setResolveLoading] = useState(false);
   const [recipes, setRecipes] = useState<Recipe[] | null>(null);
   const [variLoading, setVariLoading] = useState(false);
+  const [ingredientInput, setIngredientInput] = useState("");
+  const [ingredients, setIngredients] = useState<string[]>([]);
+  const [menus, setMenus] = useState<Recipe[] | null>(null);
+  const [menuLoading, setMenuLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -69,6 +73,31 @@ export const MealPrepView: React.FC = () => {
       setRecipes(null);
     }
     setVariLoading(false);
+  };
+
+  const addIngredient = () => {
+    const q = ingredientInput.trim();
+    if (!q) return;
+    if (!ingredients.includes(q)) setIngredients((prev) => [...prev, q]);
+    setIngredientInput("");
+    setMenus(null);
+  };
+
+  const removeIngredient = (name: string) => {
+    setIngredients((prev) => prev.filter((x) => x !== name));
+    setMenus(null);
+  };
+
+  const handleMenuFromIngredients = async () => {
+    if (ingredients.length === 0 || menuLoading) return;
+    setMenuLoading(true);
+    try {
+      const r = await api.getMenuFromIngredients(ingredients, target.goal, target.protein, target.kcal);
+      setMenus(r.menus ?? []);
+    } catch {
+      setMenus(null);
+    }
+    setMenuLoading(false);
   };
 
   const customSources = selected.filter((s) => !PROTEIN_SOURCES.some((p) => p.id === s.id));
@@ -141,6 +170,63 @@ export const MealPrepView: React.FC = () => {
           </div>
         </div>
 
+      </div>
+
+      {/* Bahan yang dimiliki */}
+      <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-3">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="text-xs font-mono text-emerald-600 uppercase tracking-wider">Menu dari Bahan</span>
+            <h3 className="text-lg font-bold text-slate-900">Bahan yang Dimiliki</h3>
+          </div>
+        </div>
+        <p className="text-xs text-slate-500">Isi bahan yang ada (mis. wortel, kentang, ayam). AI buatkan menu simple sehat sesuai target.</p>
+        <form
+          onSubmit={(e) => { e.preventDefault(); addIngredient(); }}
+          className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 focus-within:border-emerald-500 transition-colors"
+        >
+          <input
+            value={ingredientInput}
+            onChange={(e) => setIngredientInput(e.target.value)}
+            placeholder="tambah bahan…"
+            className="bg-transparent text-sm text-slate-900 focus:outline-none flex-1"
+          />
+          <button type="submit" className="text-emerald-600 text-xs font-bold">Tambah</button>
+        </form>
+        {ingredients.length > 0 && (
+          <div className="flex gap-2 flex-wrap">
+            {ingredients.map((name) => (
+              <button
+                key={name}
+                onClick={() => removeIngredient(name)}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500 text-slate-950 border border-emerald-400"
+              >
+                {name} <X className="w-3 h-3" />
+              </button>
+            ))}
+          </div>
+        )}
+        <button
+          onClick={handleMenuFromIngredients}
+          disabled={menuLoading || ingredients.length === 0}
+          className="w-full py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-xs disabled:opacity-50 active:scale-95 transition"
+        >
+          {menuLoading ? "Menyusun menu..." : "Buat Menu dari Bahan"}
+        </button>
+        {menus && menus.length > 0 && (
+          <div className="space-y-2 pt-2">
+            {menus.map((m, i) => (
+              <div key={i} className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1">
+                <span className="text-xs font-semibold text-slate-800">{m.name}</span>
+                <p className="text-[11px] text-slate-500">Bahan: {m.ingredients.join(", ")}</p>
+                <p className="text-[11px] text-slate-500">Cara: {m.steps}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Hasil */}
