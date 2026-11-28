@@ -149,9 +149,6 @@ export const api = {
     return request(`/api/ai/meal-variations`, { method: "POST", body: JSON.stringify({ names, goal }) });
   },
 
-  async getMenuFromIngredients(ingredients: string[], goal?: string, proteinTarget?: number, calorieTarget?: number): Promise<{ menus: { name: string; ingredients: string[]; steps: string }[] }> {
-    return request(`/api/ai/menu-from-ingredients`, { method: "POST", body: JSON.stringify({ ingredients, goal, proteinTarget, calorieTarget }) });
-  },
 
   async resolveFoodMacros(query: string): Promise<{ name: string; protein: number; kcal: number; carbs: number; fat: number }> {
     return request(`/api/ai/food-macros`, { method: "POST", body: JSON.stringify({ query }) });
