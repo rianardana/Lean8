@@ -3,6 +3,10 @@ import { prisma } from '@/lib/prisma'
 import { getSessionUserId } from '@/lib/session'
 import { countCompleted } from '@/lib/stats'
 import { awardXp } from '@/lib/xp'
+import { wibDate } from '@/lib/time'
+
+const QUICK_HABITS = ['workout', 'ifCompleted', 'proteinCompleted', 'waterCompleted', 'sleepCompleted', 'noSnack'] as const
+type QuickHabit = typeof QUICK_HABITS[number]
 
 const DEFAULT_DAILY = {
   workout: false, ifCompleted: false, proteinCompleted: false,
@@ -43,6 +47,28 @@ export async function POST(req: NextRequest) {
   const completedCount = countCompleted(saved)
   const amount = completedCount * 10 + (completedCount === 6 ? 20 : 0)
   const xpGained = await awardXp(userId, "daily", input.date, amount)
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { xp: true, level: true } })
+  return NextResponse.json({ ...saved, completedCount, xpGained, xp: user?.xp ?? 0, level: user?.level ?? 1 })
+}
+
+export async function PATCH(req: NextRequest) {
+  const userId = await getSessionUserId()
+  if (userId == null) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const input = await req.json().catch(() => ({})) as { habit?: unknown }
+  if (typeof input.habit !== 'string' || !QUICK_HABITS.includes(input.habit as QuickHabit)) {
+    return NextResponse.json({ error: 'valid habit required' }, { status: 400 })
+  }
+
+  const date = wibDate()
+  const habit = input.habit as QuickHabit
+  const saved = await prisma.dailyLog.upsert({
+    where: { userId_date: { userId, date } },
+    update: { [habit]: true },
+    create: { userId, date, [habit]: true },
+  })
+  const completedCount = countCompleted(saved)
+  const amount = completedCount * 10 + (completedCount === 6 ? 20 : 0)
+  const xpGained = await awardXp(userId, 'daily', date, amount)
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { xp: true, level: true } })
   return NextResponse.json({ ...saved, completedCount, xpGained, xp: user?.xp ?? 0, level: user?.level ?? 1 })
 }

@@ -8,11 +8,12 @@ import { Save, CheckCircle2, Calendar } from "lucide-react";
 
 interface DailyCheckViewProps {
   onSaved?: () => void;
+  initialDate?: string;
 }
 
-export const DailyCheckView: React.FC<DailyCheckViewProps> = ({ onSaved }) => {
+export const DailyCheckView: React.FC<DailyCheckViewProps> = ({ onSaved, initialDate }) => {
   const todayStr = wibDate();
-  const [selectedDate, setSelectedDate] = useState<string>(todayStr);
+  const [selectedDate, setSelectedDate] = useState<string>(initialDate ?? todayStr);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);

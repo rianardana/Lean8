@@ -87,6 +87,51 @@ export interface WeeklyTargetData {
   reminderEnabled: boolean;
 }
 
+export interface QuestItemData {
+  id: string;
+  title: string;
+  description: string;
+  current: number;
+  target: number;
+  rewardXp: number;
+  completed: boolean;
+  claimed: boolean;
+}
+
+export interface QuestBoardData {
+  date: string;
+  weekStart: string;
+  daily: QuestItemData;
+  weekly: QuestItemData[];
+}
+
+export interface QuestClaimData {
+  ok: boolean;
+  claimed: boolean;
+  xpGained: number;
+  xp: number;
+  level: number;
+}
+
+export interface ProgressCalendarDay {
+  date: string;
+  hasHabitLog: boolean;
+  habitCount: number;
+  habits: Omit<DailyLogData, "id" | "date" | "notes" | "completedCount" | "xpGained"> | null;
+  weight: number | null;
+  workoutCount: number;
+  mealCount: number;
+  fastCount: number;
+  hasMeasurement: boolean;
+  photoCount: number;
+}
+
+export interface ProgressCalendarData {
+  startDate: string;
+  endDate: string;
+  days: ProgressCalendarDay[];
+}
+
 export interface UserSettingsData {
   name: string;
   heightCm: number;
@@ -104,6 +149,8 @@ export interface UserSettingsData {
   fastReminderEnabled?: boolean;
   workoutReminderEnabled?: boolean;
   sleepReminderEnabled?: boolean;
+  dailyCheckReminderEnabled?: boolean;
+  dailyCheckReminderTime?: string;
 }
 
 export interface AiReviewData {

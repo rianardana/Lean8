@@ -5,10 +5,12 @@ import { WeightLogData, ProgressPhotoData, BodyMeasurementData } from "@/types";
 import { api } from "@/lib/api";
 import { wibDate } from "@/lib/time";
 import { resizeImage } from "@/lib/image";
+import { ProgressCalendar } from "@/components/ProgressCalendar";
 import { Plus, Calendar, Scale, CheckCircle2, Trash2, Ruler, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ProgressViewProps {
   onWeightLogged?: () => void;
+  onOpenDailyLog: (date: string) => void;
 }
 
 type MKey = "waist" | "chest" | "arm" | "thigh";
@@ -19,8 +21,9 @@ const MFIELDS: { key: MKey; label: string }[] = [
   { key: "thigh", label: "Paha (cm)" },
 ];
 
-export const ProgressView: React.FC<ProgressViewProps> = ({ onWeightLogged }) => {
+export const ProgressView: React.FC<ProgressViewProps> = ({ onWeightLogged, onOpenDailyLog }) => {
   const [weights, setWeights] = useState<WeightLogData[]>([]);
+  const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
   const [loading, setLoading] = useState<boolean>(true);
   const todayStr = wibDate();
   const [newWeight, setNewWeight] = useState<string>("");
@@ -65,6 +68,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ onWeightLogged }) =>
       await api.logWeight(val, selectedDate);
       setNewWeight(""); setSuccessMsg(true);
       await fetchWeights();
+      setCalendarRefreshKey((key) => key + 1);
       if (onWeightLogged) onWeightLogged();
       setTimeout(() => setSuccessMsg(false), 3000);
     } finally { setSubmitting(false); }
@@ -78,6 +82,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ onWeightLogged }) =>
       const base64 = await resizeImage(file);
       await api.addProgressPhoto(base64, todayStr);
       await fetchPhotos();
+      setCalendarRefreshKey((key) => key + 1);
     } catch {
       setPhotoMsg("Upload gagal — coba lagi.");
     }
@@ -131,6 +136,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ onWeightLogged }) =>
       setMForm({ waist: "", chest: "", arm: "", thigh: "" });
       setMSaved(true);
       await fetchMeasurements();
+      setCalendarRefreshKey((key) => key + 1);
       setTimeout(() => setMSaved(false), 3000);
     } finally { setMSubmitting(false); }
   };
@@ -165,6 +171,8 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ onWeightLogged }) =>
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
+      <ProgressCalendar key={calendarRefreshKey} onOpenDailyLog={onOpenDailyLog} />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4">
           <div>

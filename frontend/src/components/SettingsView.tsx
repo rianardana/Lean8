@@ -7,7 +7,7 @@ import { firebaseAuth } from "@/lib/firebase";
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { calcCaloriePlan, ageFromBirthdate, ActivityLevel, Goal } from "@/lib/tdde";
 import { ensurePushSubscription, pushSupported, removePushSubscription, sendTestPush } from "@/lib/push";
-import { Save, CheckCircle2, User, Target, Dumbbell, Moon, Utensils, Ruler, Scale, TrendingDown, TrendingUp, Calendar, Activity, Bell, Target as TargetIcon, Smartphone } from "lucide-react";
+import { Save, CheckCircle2, User, Target, Dumbbell, Moon, Utensils, Ruler, Scale, TrendingDown, TrendingUp, Calendar, Activity, Bell, Target as TargetIcon, Smartphone, CheckSquare } from "lucide-react";
 
 interface SettingsViewProps {
   onSaved?: () => void;
@@ -26,7 +26,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaved }) => {
     name: "Lean Mode User", heightCm: 175, currentWeight: 86, targetWeight: 65,
     sex: "male", birthdate: "", activityLevel: "moderate",
     workoutTime: "07:00", sleepTime: "22:00", proteinTargetGrams: 120, goal: "cut",
-    weeklyReminderEnabled: false,
+    weeklyReminderEnabled: false, dailyCheckReminderEnabled: false, dailyCheckReminderTime: "20:00",
   });
   const [weekly, setWeekly] = useState({ workoutSessions: 0, fastSessions: 0, fastMinHours: 16, activeDays: 0 });
   const [weeklySaving, setWeeklySaving] = useState(false);
@@ -34,6 +34,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaved }) => {
   const [pushMsg, setPushMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pushBusy, setPushBusy] = useState(false);
   const [scheduleBusy, setScheduleBusy] = useState<string | null>(null);
+  const [routineTimeSaving, setRoutineTimeSaving] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -78,7 +79,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaved }) => {
 
   const reminderEnabled = !!settings.weeklyReminderEnabled;
 
-  const toggleSchedule = async (key: "fastReminderEnabled" | "workoutReminderEnabled" | "sleepReminderEnabled") => {
+  const toggleSchedule = async (key: "fastReminderEnabled" | "workoutReminderEnabled" | "sleepReminderEnabled" | "dailyCheckReminderEnabled") => {
     const next = !settings[key];
     setScheduleBusy(key);
     setPushMsg(null);
@@ -107,6 +108,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaved }) => {
       setPushMsg({ ok: false, text: "Gagal menyimpan pengaturan notifikasi." });
     } finally {
       setScheduleBusy(null);
+    }
+  };
+
+  const saveRoutineTime = async () => {
+    setRoutineTimeSaving(true);
+    setPushMsg(null);
+    try {
+      await api.saveSettings({ dailyCheckReminderTime: settings.dailyCheckReminderTime || "20:00" });
+      setPushMsg({ ok: true, text: "Jam pengingat check-in tersimpan." });
+    } catch {
+      setPushMsg({ ok: false, text: "Gagal menyimpan jam pengingat." });
+    } finally {
+      setRoutineTimeSaving(false);
     }
   };
 
@@ -459,6 +473,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaved }) => {
               title: "Jadwal Tidur",
               desc: `Ingatkan pada Jam Tidur (${settings.sleepTime || "belum disetel"} WIB) jika habit tidur hari itu belum dicentang.`,
             },
+            {
+              key: "dailyCheckReminderEnabled" as const,
+              icon: <CheckSquare className="w-4 h-4" />,
+              title: "Check-in Harian",
+              desc: `Ingatkan sekitar pukul ${settings.dailyCheckReminderTime || "20:00"} WIB jika habit hari ini belum cukup tercatat.`,
+            },
           ].map((item) => {
             const enabled = !!settings[item.key];
             return (
@@ -484,6 +504,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaved }) => {
               </div>
             );
           })}
+        </div>
+        <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-1">
+            <label htmlFor="daily-check-reminder-time" className="text-xs font-semibold text-slate-700">Waktu rutin check-in (WIB)</label>
+            <p className="text-[10px] text-slate-500">Pilih momen yang cocok dengan rutinitasmu. Reminder hanya dikirim sekali sehari.</p>
+            <input
+              id="daily-check-reminder-time"
+              type="time"
+              value={settings.dailyCheckReminderTime || "20:00"}
+              onChange={(e) => setSettings((current) => ({ ...current, dailyCheckReminderTime: e.target.value }))}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={saveRoutineTime}
+            disabled={routineTimeSaving}
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:border-emerald-400 disabled:opacity-50"
+          >
+            {routineTimeSaving ? "Menyimpan..." : "Simpan waktu"}
+          </button>
         </div>
         <p className="text-[10px] text-slate-400">
           Ubah <span className="font-semibold">Jam Latihan</span> / <span className="font-semibold">Jam Tidur</span> di Pengaturan Personal lalu Simpan Perubahan agar jadwal notif mengikuti jam terbaru.

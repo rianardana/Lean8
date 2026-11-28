@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { sendPushToUser, webPushConfigured } from "@/lib/server-push";
+import { countCompleted } from "@/lib/stats";
 import { minutesOfDay, parseHHMM, wibHourMinute } from "@/lib/time";
 
 type RunStats = {
   ok: boolean;
   nowWib: string;
-  checked: { fastEnd: number; workout: number; sleep: number; weekly: number };
+  checked: { fastEnd: number; workout: number; sleep: number; dailyCheck: number; weekly: number };
   sent: number;
   skipped: number;
   removedSubs: number;
@@ -42,7 +43,7 @@ export async function runScheduledNotifications(options?: { includeWeekly?: bool
   const stats: RunStats = {
     ok: webPushConfigured(),
     nowWib: `${now.date} ${String(now.hour).padStart(2, "0")}:${String(now.minute).padStart(2, "0")}`,
-    checked: { fastEnd: 0, workout: 0, sleep: 0, weekly: 0 },
+    checked: { fastEnd: 0, workout: 0, sleep: 0, dailyCheck: 0, weekly: 0 },
     sent: 0,
     skipped: 0,
     removedSubs: 0,
@@ -65,7 +66,7 @@ export async function runScheduledNotifications(options?: { includeWeekly?: bool
         stats.skipped += 1;
         continue;
       }
-      // daily cron: allow up to 25h after planned end so a once-a-day run still catches it
+      // Keep a generous catch-up window in case a scheduled cron run was delayed.
       if (Date.now() - endAt.getTime() > 25 * 3600_000) {
         stats.skipped += 1;
         continue;
@@ -171,6 +172,57 @@ export async function runScheduledNotifications(options?: { includeWeekly?: bool
       stats.details.push({ kind: "sleep", userId: u.id, sent: r.sent });
     } catch (err) {
       console.error("sleep notify failed", u.id, err);
+      stats.errors += 1;
+    }
+  }
+
+  // Daily check-in reminder at the user's chosen routine time; one reminder/day.
+  const dailyCheckUsers = await prisma.user.findMany({
+    where: { dailyCheckReminderEnabled: true, pushSubscriptions: { some: {} } },
+    select: {
+      id: true,
+      dailyCheckReminderTime: true,
+      dailyLogs: {
+        where: { date: now.date },
+        select: {
+          workout: true, ifCompleted: true, proteinCompleted: true,
+          waterCompleted: true, sleepCompleted: true, noSnack: true,
+        },
+        take: 1,
+      },
+    },
+  });
+  for (const u of dailyCheckUsers) {
+    stats.checked.dailyCheck += 1;
+    try {
+      const hm = parseHHMM(u.dailyCheckReminderTime);
+      if (!hm || !inWindow(minutesOfDay(hm.hour, hm.minute), nowMin)) { stats.skipped += 1; continue; }
+      const completed = u.dailyLogs[0] ? countCompleted(u.dailyLogs[0]) : 0;
+      if (completed >= 4) { stats.skipped += 1; continue; }
+      const refKey = `daily_check:${now.date}`;
+      if (await alreadySent(u.id, "daily_check", refKey)) { stats.skipped += 1; continue; }
+      const r = await sendPushToUser(u.id, {
+        title: "Check-in singkat hari ini",
+        body: completed > 0
+          ? `Kamu sudah mencatat ${completed}/6 habit. Sempatkan lengkapi progres hari ini.`
+          : "Luangkan sebentar untuk mencatat progres hari ini. Satu langkah kecil tetap berarti.",
+        url: "/",
+        tag: `leanmode-daily-check-${now.date}`,
+        renotify: false,
+        requireInteraction: false,
+        vibrate: [180, 80, 180],
+        actions: [
+          { action: "open", title: "Catat progres" },
+          { action: "dismiss", title: "Nanti" },
+        ],
+        data: { kind: "daily_check", date: now.date },
+      });
+      await markSent(u.id, "daily_check", refKey);
+      stats.sent += r.sent;
+      stats.removedSubs += r.removed;
+      stats.details.push({ kind: "daily_check", userId: u.id, sent: r.sent, completed });
+    } catch (err) {
+      console.error("daily_check notify failed", u.id, err);
       stats.errors += 1;
     }
   }

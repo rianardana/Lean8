@@ -22,6 +22,8 @@ import { EtaInsightCard } from "@/components/EtaInsightCard";
 import { MotivationCard } from "@/components/MotivationCard";
 import { MilestoneToast } from "@/components/MilestoneToast";
 import { XpCard } from "@/components/XpCard";
+import { QuestBoard } from "@/components/QuestBoard";
+import { QuickDailyLogCard } from "@/components/QuickDailyLogCard";
 import { WeightNudge } from "@/components/WeightNudge";
 import { maybeShowWeeklyReminder } from "@/lib/weekly-reminder";
 import { ensurePushSubscription, pushSupported } from "@/lib/push";
@@ -45,6 +47,7 @@ export default function Home() {
     return () => unsub();
   }, []);
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
+  const [dailyInitialDate, setDailyInitialDate] = useState<string | undefined>();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [showTour, setShowTour] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -94,6 +97,11 @@ export default function Home() {
       const data = await api.getDashboard();
       setDashboardData(data);
     } catch { /* handled */ }
+  };
+
+  const openDailyLog = (date: string) => {
+    setDailyInitialDate(date);
+    setActiveTab("daily");
   };
 
   useEffect(() => {
@@ -205,6 +213,8 @@ export default function Home() {
           <>
             <MotivationCard />
             <XpCard xp={dashboardData.xp ?? 0} level={dashboardData.level ?? 1} />
+            <QuestBoard onXpClaimed={refreshDashboard} />
+            <QuickDailyLogCard onSaved={refreshDashboard} onOpenDailyLog={openDailyLog} />
             <BmiVisual weight={dashboardData.currentWeight} heightCm={dashboardData.heightCm} />
             <EtaInsightCard />
             <WeightNudge onSaved={refreshDashboard} />
@@ -214,10 +224,10 @@ export default function Home() {
             <WeeklyRecap />
           </>
         )}
-        {activeTab === "daily" && <DailyCheckView onSaved={refreshDashboard} />}
+        {activeTab === "daily" && <DailyCheckView key={dailyInitialDate ?? "today"} initialDate={dailyInitialDate} onSaved={refreshDashboard} />}
         {activeTab === "fast" && <FastView />}
         {activeTab === "nutrition" && <CalorieTracker />}
-        {activeTab === "progress" && <ProgressView onWeightLogged={refreshDashboard} />}
+        {activeTab === "progress" && <ProgressView onWeightLogged={refreshDashboard} onOpenDailyLog={openDailyLog} />}
         {activeTab === "workout" && <WorkoutView />}
         {activeTab === "mealprep" && <MealPrepView />}
         {activeTab === "fastReport" && <FastReport />}
@@ -226,7 +236,14 @@ export default function Home() {
       </main>
 
       {/* Bottom Navigation */}
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} onOpenMore={() => setMoreOpen(true)} />
+      <Navbar
+        activeTab={activeTab}
+        setActiveTab={(tab) => {
+          if (tab === "daily") setDailyInitialDate(undefined);
+          setActiveTab(tab);
+        }}
+        onOpenMore={() => setMoreOpen(true)}
+      />
 
       {/* Floating Coach bubble (bisa digeser) */}
       <button

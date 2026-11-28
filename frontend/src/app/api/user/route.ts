@@ -23,6 +23,8 @@ const ALLOWED: (keyof Prisma.UserUpdateInput)[] = [
   'fastReminderEnabled',
   'workoutReminderEnabled',
   'sleepReminderEnabled',
+  'dailyCheckReminderEnabled',
+  'dailyCheckReminderTime',
 ]
 
 export async function GET(req: NextRequest) {

@@ -34,6 +34,8 @@ model User {
   fastReminderEnabled   Boolean            @default(false)
   workoutReminderEnabled Boolean           @default(false)
   sleepReminderEnabled  Boolean            @default(false)
+  dailyCheckReminderEnabled Boolean         @default(false)
+  dailyCheckReminderTime String             @default("20:00")
   dailyLogs             DailyLog[]
   weightLogs            WeightLog[]
   mealLogs              MealLog[]
@@ -83,7 +85,7 @@ model PushSubscription {
 model NotificationLog {
   id        Int      @id @default(autoincrement())
   userId    Int
-  kind      String // fast_end | workout | sleep | weekly (future)
+  kind      String // fast_end | workout | sleep | daily_check | weekly
   refKey    String // idempotency key, e.g. fast:123, workout:2026-11-09, sleep:2026-11-09
   sentAt    DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

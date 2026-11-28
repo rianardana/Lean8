@@ -1,4 +1,4 @@
-import { DashboardData, DailyLogData, WeightLogData, UserSettingsData, AiReviewData, MealLogData, FoodItemData, WorkoutLogData, FastData, EtaInsightData, ProgramEnrollmentData, ProgressPhotoData, BodyMeasurementData, WeeklyRecapData, WeeklyTargetData } from "@/types";
+import { DashboardData, DailyLogData, WeightLogData, UserSettingsData, AiReviewData, MealLogData, FoodItemData, WorkoutLogData, FastData, EtaInsightData, ProgramEnrollmentData, ProgressPhotoData, BodyMeasurementData, WeeklyRecapData, WeeklyTargetData, QuestBoardData, QuestClaimData, ProgressCalendarData } from "@/types";
 import { wibDate } from "@/lib/time";
 import { firebaseAuth } from "@/lib/firebase";
 
@@ -56,6 +56,10 @@ export const api = {
     return request<DailyLogData>(`/api/daily`, { method: "POST", body: JSON.stringify(log) });
   },
 
+  async quickLogHabit(habit: keyof Pick<DailyLogData, "workout" | "ifCompleted" | "proteinCompleted" | "waterCompleted" | "sleepCompleted" | "noSnack">): Promise<DailyLogData> {
+    return request<DailyLogData>(`/api/daily`, { method: "PATCH", body: JSON.stringify({ habit }) });
+  },
+
   async getWeights(): Promise<WeightLogData[]> {
     return request<WeightLogData[]>(`/api/weight`);
   },
@@ -89,6 +93,14 @@ export const api = {
     return request<WeeklyTargetData>(`/api/weekly-target${qs}`);
   },
 
+  async getQuests(): Promise<QuestBoardData> {
+    return request<QuestBoardData>(`/api/quests`);
+  },
+
+  async claimQuest(id: string): Promise<QuestClaimData> {
+    return request<QuestClaimData>(`/api/quests`, { method: "POST", body: JSON.stringify({ id }) });
+  },
+
   async saveWeeklyTarget(payload: {
     weekStart?: string;
     workoutSessions?: number;
@@ -107,6 +119,10 @@ export const api = {
     return request(`/api/stats`);
   },
 
+  async getProgressCalendar(): Promise<ProgressCalendarData> {
+    return request<ProgressCalendarData>(`/api/progress-calendar`);
+  },
+
   async chatCoach(messages: { role: 'user' | 'assistant'; content: string }[]): Promise<{ reply: string }> {
     return request(`/api/ai/chat`, { method: "POST", body: JSON.stringify({ messages }) });
   },
@@ -121,7 +137,7 @@ export const api = {
     return user ?? { name: "User", heightCm: 175, currentWeight: 86, targetWeight: 65, workoutTime: "07:00", sleepTime: "22:00", proteinTargetGrams: 120 };
   },
 
-  async saveSettings(settings: UserSettingsData): Promise<UserSettingsData> {
+  async saveSettings(settings: Partial<UserSettingsData>): Promise<UserSettingsData> {
     return request<UserSettingsData>(`/api/user`, { method: "POST", body: JSON.stringify(settings) });
   },
 
